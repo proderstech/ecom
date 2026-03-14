@@ -1,0 +1,36 @@
+.wrapper { display: flex; flex-direction: column; min-height: 100vh; background: var(--black); font-family: var(--font-body); }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; background: var(--charcoal-2); border-bottom: 1px solid var(--dark-grey); }
+.logo { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+.status { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--success); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.main { flex: 1; padding: 24px; max-width: 600px; margin: 0 auto; width: 100%; }
+.jobList h2 { font-size: 18px; color: var(--white); margin-bottom: 20px; }
+.listItem { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; cursor: pointer; transition: all var(--transition); }
+.listItem:hover { border-color: var(--gold); transform: translateY(-2px); }
+.listHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.listHead strong { font-size: 15px; color: var(--gold); }
+.listHead span { font-size: 13px; color: var(--light-grey); font-weight: 600; }
+.listBody p { font-size: 14px; color: var(--silver); margin-bottom: 12px; line-height: 1.5; }
+.ageTag { display: inline-block; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+/* Active Job */
+.backBtn { background: none; border: none; color: var(--light-grey); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 24px; }
+.jobCard { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-lg); padding: 24px; }
+.jobHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; border-bottom: 1px solid var(--dark-grey); padding-bottom: 16px; }
+.jobHead h2 { font-size: 1.4rem; color: var(--gold); }
+.distance { font-size: 13px; font-weight: 600; color: var(--silver); background: var(--charcoal-3); padding: 6px 12px; border-radius: 20px; }
+.customerInfo { display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
+.infoRow { display: flex; align-items: flex-start; gap: 16px; }
+.icon { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+.infoRow strong { display: block; font-size: 16px; color: var(--white); margin-bottom: 4px; }
+.infoRow p { font-size: 14px; color: var(--silver); line-height: 1.5; }
+.infoRow a { font-size: 16px; font-weight: 700; color: var(--gold); text-decoration: underline; }
+.ageAlert { display: flex; gap: 16px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: var(--radius-sm); padding: 20px; margin-bottom: 28px; }
+.alertIcon { color: var(--danger); flex-shrink: 0; }
+.ageAlert h3 { font-size: 16px; color: var(--danger); margin-bottom: 6px; }
+.ageAlert p { font-size: 13px; color: var(--silver); line-height: 1.6; }
+.actionBtns { display: flex; flex-direction: column; gap: 12px; }
+.navBtn, .completeBtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer; transition: all var(--transition); }
+.navBtn { background: var(--charcoal-3); border: 1px solid var(--dark-grey); color: var(--white); }
+.navBtn:hover { border-color: var(--gold); color: var(--gold); }
+.completeBtn { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--black); }
+.completeBtn:hover { transform: translateY(-1px); box-shadow: var(--shadow-gold); }

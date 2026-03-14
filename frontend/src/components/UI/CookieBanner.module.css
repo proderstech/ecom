@@ -1,0 +1,38 @@
+.banner {
+  position: fixed; bottom: 20px; left: 20px; right: 20px;
+  max-width: 640px;
+  background: var(--charcoal-2);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  display: flex; gap: 16px; align-items: flex-start;
+  z-index: 8888;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+  animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:none; } }
+.icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.content { flex: 1; }
+.title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+.text { font-size: 12px; color: var(--light-grey); line-height: 1.7; margin-bottom: 14px; }
+.text a { color: var(--gold); text-decoration: underline; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btnAccept {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--black);
+  padding: 9px 20px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  transition: all var(--transition);
+}
+.btnAccept:hover { box-shadow: 0 3px 12px rgba(201,168,76,0.4); }
+.btnDecline {
+  background: transparent; color: var(--light-grey);
+  border: 1px solid var(--dark-grey);
+  padding: 9px 16px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600;
+  transition: all var(--transition);
+}
+.btnDecline:hover { border-color: var(--light-grey); color: var(--silver); }
+.btnLearn { font-size: 12px; color: var(--mid-grey); text-decoration: underline; }
+.btnLearn:hover { color: var(--gold); }
+@media (max-width: 480px) { .banner { left: 12px; right: 12px; flex-direction: column; } }

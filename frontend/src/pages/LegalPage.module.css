@@ -1,0 +1,33 @@
+.main { padding-top: calc(var(--header-h) + 40px); min-height: 100vh; background: var(--black); }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 28px 80px; }
+.header { text-align: center; margin-bottom: 48px; }
+.header h1 { font-family: var(--font-display); font-size: 2.2rem; color: var(--gold); margin-bottom: 12px; }
+.header p { font-size: 14px; color: var(--light-grey); max-width: 500px; margin: 0 auto; }
+.layout { display: grid; grid-template-columns: 280px 1fr; gap: 40px; align-items: start; }
+/* Sidebar */
+.sidebar { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: calc(var(--header-h) + 20px); }
+.navBtn { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--silver); background: transparent; transition: all var(--transition); text-align: left; }
+.navBtn:hover { background: var(--charcoal-3); color: var(--gold); }
+.navBtn svg { color: var(--gold); opacity: 0.7; }
+.active { background: rgba(201,168,76,0.1) !important; color: var(--gold) !important; font-weight: 700; }
+.active svg { opacity: 1; }
+.contactCard { margin-top: 24px; padding: 16px; background: var(--charcoal-3); border-radius: var(--radius-sm); border: 1px solid var(--dark-grey); text-align: center; }
+.infoIcon { color: var(--gold); margin-bottom: 8px; }
+.contactCard h4 { font-size: 13px; color: var(--white); margin-bottom: 6px; }
+.contactCard p { font-size: 11px; color: var(--light-grey); line-height: 1.6; }
+/* Content */
+.content { min-width: 0; }
+.policyCard { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-lg); padding: 48px; }
+.policyHeader { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.iconGold { color: var(--gold); }
+.policyCard h2 { font-family: var(--font-display); font-size: 1.8rem; color: var(--white); }
+.badge { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.textBody { color: var(--silver); font-size: 14px; line-height: 1.8; display: flex; flex-direction: column; gap: 20px; }
+.textBody h3 { font-size: 1.2rem; color: var(--gold); font-family: var(--font-display); margin: 20px 0 0; }
+.textBody p { margin: 0; }
+.textBody ul { padding-left: 20px; list-style-type: disc; display: flex; flex-direction: column; gap: 8px; }
+.textBody li { color: var(--light-grey); }
+.textBody strong { color: var(--white); }
+.warningBox { background: rgba(201,168,76,0.06); border-left: 3px solid var(--gold); padding: 16px 20px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--light-grey); margin: 16px 0; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { position: static; flex-direction: row; flex-wrap: wrap; } .navBtn { flex: 1; min-width: 150px; justify-content: center; } .contactCard { display: none; } }
+@media (max-width: 600px) { .container { padding: 0 16px 60px; } .navBtn { min-width: 100%; justify-content: flex-start; } .policyCard { padding: 24px; } }

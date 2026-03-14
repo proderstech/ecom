@@ -1,0 +1,31 @@
+.footer { background: var(--charcoal); border-top: 1px solid rgba(201,168,76,0.15); }
+.container { max-width: 1400px; margin: 0 auto; padding: 0 28px; }
+.top { padding: 64px 0 48px; }
+.grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.2fr; gap: 44px; }
+.brand p { font-size: 13px; color: var(--light-grey); line-height: 1.85; margin-bottom: 22px; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.logoIcon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--gold), var(--gold-dark)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.logoName { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--white); line-height: 1; }
+.logoSub { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+.socials { display: flex; gap: 9px; margin-bottom: 20px; }
+.social { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--charcoal-3); border: 1px solid var(--dark-grey); display: flex; align-items: center; justify-content: center; color: var(--silver); transition: all var(--transition); }
+.social:hover { background: var(--gold); color: var(--black); border-color: var(--gold); }
+.licenceBadge { font-size: 11px; color: var(--mid-grey); border: 1px solid var(--dark-grey); padding: 8px 12px; border-radius: var(--radius-sm); display: inline-block; }
+.licenceBadge strong { color: var(--silver); }
+.col h4 { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 22px; }
+.col ul { display: flex; flex-direction: column; gap: 10px; }
+.link { font-size: 13px; color: var(--light-grey); transition: color var(--transition); }
+.link:hover { color: var(--gold); }
+.contact { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.contactItem { display: flex; gap: 10px; font-size: 12px; color: var(--light-grey); line-height: 1.6; align-items: flex-start; }
+.contactIcon { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+.ageWarning { font-size: 11px; color: var(--warning); background: rgba(230,126,34,0.08); border: 1px solid rgba(230,126,34,0.2); padding: 10px 12px; border-radius: var(--radius-sm); line-height: 1.6; }
+.bottom { border-top: 1px solid var(--dark-grey); padding: 24px 0; }
+.bottomInner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.legal p { font-size: 11px; color: var(--mid-grey); line-height: 1.8; }
+.ageNotice a { color: var(--gold); }
+.ageNotice a:hover { text-decoration: underline; }
+.payments { display: flex; gap: 8px; flex-wrap: wrap; }
+.payIcon { font-size: 11px; color: var(--silver); background: var(--charcoal-3); border: 1px solid var(--dark-grey); padding: 5px 10px; border-radius: var(--radius-xs); font-weight: 600; white-space: nowrap; }
+@media (max-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .container { padding: 0 16px; } .top { padding: 40px 0 32px; } .bottomInner { flex-direction: column; align-items: flex-start; } }

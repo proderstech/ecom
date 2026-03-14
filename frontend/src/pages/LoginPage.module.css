@@ -1,0 +1,40 @@
+.main { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--black); padding: calc(var(--header-h) + 40px) 20px 60px; }
+.container { width: 100%; max-width: 460px; }
+.card { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-xl); padding: 40px 36px; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; justify-content: center; }
+.logo span { font-size: 32px; }
+.logoName { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--white); text-align: center; }
+.logoSub { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); text-align: center; }
+.tabs { display: flex; background: var(--charcoal-3); border-radius: var(--radius); padding: 4px; margin-bottom: 32px; }
+.tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--light-grey); cursor: pointer; transition: all var(--transition); }
+.tabActive { background: var(--charcoal-2); color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.form { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
+.formGroup { display: flex; flex-direction: column; }
+.formGroup label { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--silver); margin-bottom: 8px; }
+.inputWrap { position: relative; }
+.inputIcon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--light-grey); pointer-events: none; }
+.inputWrap input { padding-left: 42px; background: var(--charcoal-3); }
+.eyeBtn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--light-grey); cursor: pointer; transition: color var(--transition); background: none; }
+.eyeBtn:hover { color: var(--gold); }
+.checks { display: flex; flex-direction: column; gap: 12px; }
+.checkLabel { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 12px; color: var(--light-grey); line-height: 1.65; }
+.checkLabel input { width: 16px; height: 16px; accent-color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+.checkLabel a { color: var(--gold); text-decoration: underline; }
+.forgotRow { text-align: right; }
+.forgot { font-size: 12px; color: var(--gold); text-decoration: underline; }
+.submitBtn { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--black); padding: 14px; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; transition: all var(--transition); margin-top: 4px; }
+.submitBtn:hover { box-shadow: var(--shadow-gold); transform: translateY(-1px); }
+.divider { position: relative; text-align: center; margin: 24px 0; }
+.divider::before { content: ''; position: absolute; inset: 50% 0 50%; height: 1px; background: var(--dark-grey); }
+.divider span { display: inline-block; background: var(--charcoal-2); padding: 0 14px; font-size: 12px; color: var(--light-grey); position: relative; }
+.socials { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.socialBtn { padding: 12px; border-radius: var(--radius-sm); background: var(--charcoal-3); border: 1px solid var(--dark-grey); color: var(--silver); font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--transition); }
+.socialBtn:hover { border-color: var(--gold); color: var(--white); }
+.footer { text-align: center; }
+.switchText { font-size: 13px; color: var(--light-grey); margin-bottom: 12px; }
+.switchBtn { color: var(--gold); font-size: 13px; font-weight: 600; text-decoration: underline; cursor: pointer; background: none; }
+.portals { display: flex; justify-content: center; gap: 12px; font-size: 11px; }
+.portals span { color: var(--dark-grey); }
+.portalLink { color: var(--mid-grey); transition: color var(--transition); }
+.portalLink:hover { color: var(--gold); }
+@media (max-width: 480px) { .card { padding: 28px 20px; } }
