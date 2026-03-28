@@ -16,7 +16,7 @@
 @keyframes zoomIn { from { transform: scale(1.08); } to { transform: scale(1); } }
 .heroOverlay {
   position: absolute; inset: 0;
-  background: linear-gradient(105deg, rgba(255,255,255,0.88) 45%, rgba(255,255,255,0.4) 100%);
+  background: linear-gradient(105deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.4) 100%);
 }
 .heroContent { position: relative; z-index: 2; width: 100%; }
 .heroInner { max-width: 1400px; margin: 0 auto; padding: 0 28px; }

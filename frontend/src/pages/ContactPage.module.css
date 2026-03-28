@@ -1,0 +1,356 @@
+.contactPage {
+  padding-top: var(--header-h);
+  background: var(--black);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ── Header ── */
+.header {
+  padding: 80px 0 100px;
+  background: #080808;
+  color: #fff;
+  text-align: center;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.1;
+  font-weight: 800;
+  margin-bottom: 32px;
+}
+
+.gold {
+  color: var(--gold);
+}
+
+.headerDesc {
+  font-size: 18px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* ── Content ── */
+.content {
+  padding: 100px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 100px;
+}
+
+/* ── Form ── */
+.formSection {
+  background: var(--charcoal);
+  border: 1px solid var(--dark-grey);
+  border-radius: 24px;
+  padding: 60px;
+  box-shadow: var(--shadow);
+}
+
+.formHeader {
+  margin-bottom: 48px;
+}
+
+.formHeader h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.formHeader p {
+  font-size: 14px;
+  color: var(--light-grey);
+}
+
+.inputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.inputGroup {
+  margin-bottom: 30px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--silver);
+  margin-bottom: 12px;
+}
+
+.inputGroup input, .inputGroup select, .inputGroup textarea {
+  background: var(--charcoal-2);
+  border: 1px solid var(--dark-grey);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 15px;
+  color: var(--white);
+  transition: all 0.3s ease;
+}
+
+.inputGroup input:focus, .inputGroup select:focus, .inputGroup textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.1);
+  background: var(--charcoal-3);
+}
+
+.submitBtn {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  padding: 20px 40px;
+  font-weight: 800;
+  font-size: 16px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  width: auto;
+  min-width: 240px;
+}
+
+.submitBtn:hover {
+  background: var(--gold-light);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(201, 168, 76, 0.3);
+}
+
+/* ── Info Card ── */
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.infoCard {
+  background: var(--charcoal-2);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid var(--dark-grey);
+}
+
+.infoCard h3 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--gold);
+  margin-bottom: 32px;
+}
+
+.infoItems {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.infoItem {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.iconCircle {
+  width: 44px; height: 44px;
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.infoTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--mid-grey);
+  margin-bottom: 4px;
+}
+
+.infoDesc {
+  font-size: 15px;
+  color: var(--white);
+  line-height: 1.6;
+}
+
+.faqCard {
+  background: var(--charcoal-2);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid var(--dark-grey);
+}
+
+.faqCard h3 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--gold);
+  margin-bottom: 32px;
+}
+
+.faqItem {
+  margin-bottom: 24px;
+}
+
+.faqItem:last-child {
+  margin-bottom: 0;
+}
+
+.faqItem strong {
+  display: block;
+  font-size: 15px;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.faqItem p {
+  font-size: 14px;
+  color: var(--light-grey);
+  line-height: 1.6;
+}
+
+/* ── Map ── */
+.mapSection {
+  padding: 0 0 140px;
+}
+
+.mapInner {
+  position: relative;
+  height: 500px;
+  border-radius: 32px;
+  overflow: hidden;
+  background: var(--charcoal-2);
+}
+
+.mapMockup {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1524333865980-60191701c4e6?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.6;
+  filter: grayscale(1) invert(0.1);
+}
+
+.mapOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.mapCard {
+  background: var(--charcoal);
+  padding: 50px;
+  border-radius: 24px;
+  text-align: center;
+  max-width: 440px;
+  border: 1px solid var(--dark-grey);
+  box-shadow: var(--shadow-xl);
+}
+
+.logoBadge {
+  width: 50px; height: 50px;
+  background: var(--gold);
+  font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  margin: 0 auto 24px;
+}
+
+.mapCard h3 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.mapCard p {
+  font-size: 15px;
+  color: var(--light-grey);
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+
+.mapLink {
+  display: inline-block;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 4px;
+}
+
+/* ── Success ── */
+.success {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.successIcon {
+  color: var(--success);
+  margin-bottom: 32px;
+}
+
+.success h2 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--white);
+  margin-bottom: 24px;
+}
+
+.success p {
+  font-size: 18px;
+  color: var(--light-grey);
+  line-height: 1.8;
+  max-width: 500px;
+  margin: 0 auto 40px;
+}
+
+.backBtn {
+  color: var(--gold);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; gap: 60px; }
+  .formSection { padding: 40px; }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 24px; }
+  .inputRow { grid-template-columns: 1fr; gap: 0; }
+  .mapCard { margin: 0 20px; padding: 40px 24px; }
+  .mapInner { height: 600px; }
+}

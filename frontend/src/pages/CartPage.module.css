@@ -78,5 +78,6 @@
 /* Trust */
 .trustBadges { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .trustBadge { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 11px; color: var(--light-grey); text-align: center; }
+.guestNote { font-size: 12px; color: var(--light-grey); text-align: center; margin: -4px 0 12px; background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.15); border-radius: var(--radius-sm); padding: 8px 12px; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .summary { position: static; } }
 @media (max-width: 600px) { .container { padding: 20px 16px 50px; } .item { flex-wrap: wrap; } .itemControls { width: 100%; justify-content: space-between; } }

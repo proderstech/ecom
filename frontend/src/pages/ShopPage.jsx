@@ -1,145 +1,133 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, X, ChevronDown, ChevronUp, Grid3X3, List } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, ChevronUp, Grid3X3, List, Search, Filter } from 'lucide-react';
 import ProductCard from '../components/UI/ProductCard';
-import { PRODUCTS, CATEGORIES } from '../data/products';
+import { productsAPI, categoriesAPI } from '../services/api';
 import styles from './ShopPage.module.css';
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured' },
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
   { value: 'rating', label: 'Best Rated' },
   { value: 'newest', label: 'Newest' },
 ];
 
-const BRANDS = [...new Set(PRODUCTS.map(p => p.brand))];
-const COUNTRIES = [...new Set(PRODUCTS.map(p => p.country))];
-
 export default function ShopPage() {
   const [params, setParams] = useSearchParams();
   const [sort, setSort] = useState('featured');
-  const [priceRange, setPriceRange] = useState([0, 200]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedCountries, setSelectedCountries] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [priceRange, setPriceRange] = useState([0, 500]);
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [view, setView] = useState('grid');
-  const [openSections, setOpenSections] = useState({ category: true, price: true, brand: false, country: false, abv: false });
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  const catFilter = params.get('cat') || '';
-  const searchFilter = params.get('search') || '';
+  // Derived filter values from URL
+  const selectedCatName = useMemo(() => params.get('cat'), [params]);
+  const query = useMemo(() => params.get('q') || params.get('search'), [params]);
 
-  const setCat = (cat) => {
+  const setCat = (catName) => {
     const p = new URLSearchParams(params);
-    if (cat) p.set('cat', cat); else p.delete('cat');
+    if (catName) p.set('cat', catName); else p.delete('cat');
     setParams(p);
+    setPage(1);
   };
 
-  const toggleBrand = (b) => setSelectedBrands(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
-  const toggleCountry = (c) => setSelectedCountries(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
-  const toggleSection = (s) => setOpenSections(o => ({ ...o, [s]: !o[s] }));
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      // If we have a category name in the URL, find its ID to send to the backend
+      let categoryId = undefined;
+      if (selectedCatName && categories.length > 0) {
+        const cat = categories.find(c => c.name.toLowerCase() === selectedCatName.toLowerCase());
+        if (cat) categoryId = cat.id;
+      }
+
+      const data = await productsAPI.list({
+        page, 
+        limit: 12, 
+        sort,
+        search: query || undefined,
+        category_id: categoryId || undefined,
+        min_price: priceRange[0] > 0 ? priceRange[0] : undefined,
+        max_price: priceRange[1] < 500 ? priceRange[1] : undefined,
+      });
+      setProducts(data?.items || []);
+      setTotal(data?.total || 0);
+    } catch (e) {
+      console.error("Fetch products failed:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, sort, priceRange, selectedCatName, query, categories]);
+
+  useEffect(() => { 
+    fetchProducts(); 
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    categoriesAPI.list().then(cats => {
+      setCategories(cats?.items || cats || []);
+    }).catch(console.error);
+  }, []);
 
   const clearFilters = () => {
-    setCat('');
-    setSelectedBrands([]);
-    setSelectedCountries([]);
-    setPriceRange([0, 200]);
+    setParams({});
+    setPriceRange([0, 500]);
+    setSort('featured');
   };
 
-  const filtered = useMemo(() => {
-    let list = [...PRODUCTS];
-    if (catFilter) list = list.filter(p => p.category === catFilter);
-    if (searchFilter) list = list.filter(p =>
-      p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      p.brand.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchFilter.toLowerCase())
-    );
-    list = list.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    if (selectedBrands.length) list = list.filter(p => selectedBrands.includes(p.brand));
-    if (selectedCountries.length) list = list.filter(p => selectedCountries.includes(p.country));
-    switch (sort) {
-      case 'price-asc': return list.sort((a, b) => a.price - b.price);
-      case 'price-desc': return list.sort((a, b) => b.price - a.price);
-      case 'rating': return list.sort((a, b) => b.rating - a.rating);
-      default: return list;
-    }
-  }, [catFilter, searchFilter, priceRange, selectedBrands, selectedCountries, sort]);
+  const currentCategoryName = useMemo(() => {
+     return selectedCatName || null;
+  }, [selectedCatName]);
 
   const SidebarContent = () => (
     <div className={styles.sidebar}>
-      <div className={styles.sidebarHeader}>
-        <h3>Filters</h3>
-        <button className={styles.clearBtn} onClick={clearFilters}>Clear All</button>
+      <div className={styles.sidebarSection}>
+        <div className={styles.sidebarHeader}>
+           <Filter size={16} />
+           <span>Filters</span>
+        </div>
+        <button className={styles.clearAll} onClick={clearFilters}>Reset All</button>
       </div>
 
-      {/* Category */}
-      <div className={styles.filterGroup}>
-        <button className={styles.filterToggle} onClick={() => toggleSection('category')}>
-          <span>Category</span>{openSections.category ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        {openSections.category && (
-          <div className={styles.filterOptions}>
-            <button className={`${styles.catBtn} ${!catFilter ? styles.catBtnActive : ''}`} onClick={() => setCat('')}>All Products ({PRODUCTS.length})</button>
-            {CATEGORIES.map(c => (
-              <button key={c.id} className={`${styles.catBtn} ${catFilter === c.label ? styles.catBtnActive : ''}`} onClick={() => setCat(c.label)}>
-                {c.icon} {c.label} ({PRODUCTS.filter(p => p.category === c.label).length})
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Categories */}
+      <div className={styles.filterBlock}>
+        <h4 className={styles.blockTitle}>Categories</h4>
+        <div className={styles.catList}>
+          {categories.map(cat => (
+            <button 
+              key={cat.id}
+              className={`${styles.catItem} ${selectedCatName === cat.name ? styles.catActive : ''}`}
+              onClick={() => setCat(cat.name)}
+            >
+              <span className={styles.catIcon}>{cat.icon || '🍷'}</span>
+              <span className={styles.catName}>{cat.name}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Price */}
-      <div className={styles.filterGroup}>
-        <button className={styles.filterToggle} onClick={() => toggleSection('price')}>
-          <span>Price Range</span>{openSections.price ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        {openSections.price && (
-          <div className={styles.filterOptions}>
-            <div className={styles.priceDisplay}>
-              <span>£{priceRange[0]}</span><span>£{priceRange[1]}+</span>
-            </div>
-            <input type="range" min="0" max="200" step="5"
-              value={priceRange[1]}
-              onChange={e => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-              className={styles.range} />
-          </div>
-        )}
-      </div>
-
-      {/* Brand */}
-      <div className={styles.filterGroup}>
-        <button className={styles.filterToggle} onClick={() => toggleSection('brand')}>
-          <span>Brand</span>{openSections.brand ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        {openSections.brand && (
-          <div className={styles.filterOptions}>
-            {BRANDS.map(b => (
-              <label key={b} className={styles.checkLabel}>
-                <input type="checkbox" checked={selectedBrands.includes(b)} onChange={() => toggleBrand(b)} />
-                <span>{b}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Country */}
-      <div className={styles.filterGroup}>
-        <button className={styles.filterToggle} onClick={() => toggleSection('country')}>
-          <span>Country</span>{openSections.country ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        {openSections.country && (
-          <div className={styles.filterOptions}>
-            {COUNTRIES.map(c => (
-              <label key={c} className={styles.checkLabel}>
-                <input type="checkbox" checked={selectedCountries.includes(c)} onChange={() => toggleCountry(c)} />
-                <span>{c}</span>
-              </label>
-            ))}
-          </div>
-        )}
+      {/* Price Range */}
+      <div className={styles.filterBlock}>
+        <h4 className={styles.blockTitle}>Price (GBP)</h4>
+        <div className={styles.priceInputs}>
+           <div className={styles.priceSlider}>
+             <input 
+               type="range" 
+               min="0" max="500" step="10"
+               value={priceRange[1]}
+               onChange={e => setPriceRange([0, parseInt(e.target.value)])}
+             />
+             <div className={styles.priceLabels}>
+                <span>£0</span>
+                <span>£{priceRange[1]}{priceRange[1] === 500 ? '+' : ''}</span>
+             </div>
+           </div>
+        </div>
       </div>
     </div>
   );
@@ -147,54 +135,80 @@ export default function ShopPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        {/* Breadcrumb */}
-        <div className={styles.breadcrumb}>
-          <a href="/">Home</a><span>/</span>
-          <span>Shop</span>
-          {catFilter && <><span>/</span><span className={styles.current}>{catFilter}</span></>}
-        </div>
-
-        <div className={styles.pageHeader}>
-          <div>
-            <h1>{catFilter || searchFilter ? (catFilter || `Search: "${searchFilter}"`) : 'All Products'}</h1>
-            <p>{filtered.length} product{filtered.length !== 1 ? 's' : ''} found</p>
-          </div>
-          <div className={styles.pageActions}>
-            <button className={styles.filterToggleBtn} onClick={() => setMobileSidebar(true)}>
-              <SlidersHorizontal size={16} /> Filters
-            </button>
-            <div className={styles.sortWrap}>
-              <label>Sort by:</label>
-              <select value={sort} onChange={e => setSort(e.target.value)}>
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+        {/* Header Area */}
+        <div className={styles.pageHero}>
+          <div className={styles.heroContent}>
+            <div className={styles.breadcrumb}>
+              <a href="/">Home</a> <span>/</span> <span>Shop</span>
             </div>
-            <div className={styles.viewToggle}>
-              <button className={`${styles.viewBtn} ${view === 'grid' ? styles.viewActive : ''}`} onClick={() => setView('grid')}><Grid3X3 size={16} /></button>
-              <button className={`${styles.viewBtn} ${view === 'list' ? styles.viewActive : ''}`} onClick={() => setView('list')}><List size={16} /></button>
-            </div>
+            <h1>{currentCategoryName || (query ? `Results for "${query}"` : 'The Collection')}</h1>
+            <p className={styles.countText}>{total} premium products found</p>
           </div>
         </div>
 
         <div className={styles.layout}>
-          {/* Desktop Sidebar */}
-          <div className={`${styles.sidebarWrap} ${sidebarOpen ? '' : styles.sidebarHidden}`}>
+          {/* Sidebar Area (Desktop) */}
+          <aside className={styles.sidebarWrapper}>
             <SidebarContent />
-          </div>
+          </aside>
 
-          {/* Products */}
-          <div className={styles.products}>
-            {filtered.length === 0 ? (
-              <div className={styles.empty}>
-                <div className={styles.emptyIcon}>🔍</div>
-                <h3>No products found</h3>
-                <p>Try adjusting your filters or search term.</p>
-                <button className={styles.emptyBtn} onClick={clearFilters}>Clear Filters</button>
+          {/* Product Grid Area */}
+          <div className={styles.content}>
+            {/* Toolbar */}
+            <div className={styles.toolbar}>
+               <button className={styles.mobileFilterBtn} onClick={() => setMobileSidebar(true)}>
+                 <SlidersHorizontal size={16} /> Filters
+               </button>
+               
+               <div className={styles.toolGroup}>
+                 <div className={styles.sortContainer}>
+                   <span>Sort:</span>
+                   <select value={sort} onChange={e => setSort(e.target.value)}>
+                     {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                   </select>
+                 </div>
+                 <div className={styles.viewToggle}>
+                   <button 
+                    className={`${styles.viewBtn} ${view === 'grid' ? styles.viewActive : ''}`}
+                    onClick={() => setView('grid')}
+                   >
+                     <Grid3X3 size={18} />
+                   </button>
+                   <button 
+                    className={`${styles.viewBtn} ${view === 'list' ? styles.viewActive : ''}`}
+                    onClick={() => setView('list')}
+                   >
+                     <List size={18} />
+                   </button>
+                 </div>
+               </div>
+            </div>
+
+            {/* List/Grid */}
+            {loading ? (
+              <div className={styles.productsGrid}>
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} className={styles.skeletonCard} />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <div className={styles.emptyState}>
+                <Search size={48} className={styles.emptyIcon} />
+                <h2>No products found</h2>
+                <p>We couldn't find any items matching your current filters. Try resetting them.</p>
+                <button onClick={clearFilters} className={styles.resetBtn}>Reset All Filters</button>
               </div>
             ) : (
-              <div className={`${styles.grid} ${view === 'list' ? styles.listView : ''}`}>
-                {filtered.map(p => <ProductCard key={p.id} product={p} />)}
+              <div className={`${styles.productsGrid} ${view === 'list' ? styles.listView : ''}`}>
+                {products.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
+            )}
+
+            {/* Pagination Placeholder */}
+            {total > products.length && (
+               <div className={styles.loadMore}>
+                 <button onClick={() => setPage(p => p + 1)} className={styles.loadBtn}>Load More Products</button>
+               </div>
             )}
           </div>
         </div>
@@ -202,15 +216,17 @@ export default function ShopPage() {
 
       {/* Mobile Sidebar Overlay */}
       {mobileSidebar && (
-        <div className={styles.mobileOverlay}>
-          <div className={styles.mobileSidebar}>
-            <div className={styles.mobileSidebarHeader}>
+        <div className={styles.mobileOverlay} onClick={() => setMobileSidebar(false)}>
+          <div className={styles.mobileSidebar} onClick={e => e.stopPropagation()}>
+            <div className={styles.mobileHeader}>
               <h3>Filters</h3>
               <button onClick={() => setMobileSidebar(false)}><X size={20} /></button>
             </div>
-            <SidebarContent />
-            <button className={styles.applyBtn} onClick={() => setMobileSidebar(false)}>
-              Apply Filters ({filtered.length} results)
+            <div className={styles.mobileSidebarBody}>
+               <SidebarContent />
+            </div>
+            <button className={styles.mobileApply} onClick={() => setMobileSidebar(false)}>
+              Show {total} Results
             </button>
           </div>
         </div>

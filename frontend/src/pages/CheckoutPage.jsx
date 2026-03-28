@@ -1,24 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, CreditCard, Truck, MapPin, ChevronDown, CheckCircle } from 'lucide-react';
+import { Lock, CreditCard, Truck, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
+import { ordersAPI, cartAPI, getImageUrl } from '../services/api';
 import { useStore } from '../context/StoreContext';
+import CartItemImage from '../components/UI/CartItemImage';
 import styles from './CheckoutPage.module.css';
 
 const STEPS = ['Delivery', 'Payment', 'Review'];
 
 export default function CheckoutPage() {
-  const { state, dispatch, cartTotal } = useStore();
+  const { state, dispatch, cartTotal, clearCart } = useStore();
   const navigate = useNavigate();
+
+  // Auth guard — redirect to home with modal if not logged in
+  useEffect(() => {
+    if (!state.user) {
+      dispatch({ type: 'SHOW_CHECKOUT_MODAL' });
+      navigate('/cart', { replace: true });
+    }
+  }, [state.user, dispatch, navigate]);
+
   const [step, setStep] = useState(0);
   const [success, setSuccess] = useState(false);
   const [payMethod, setPayMethod] = useState('card');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '',
+    firstName: state.user?.name?.split(' ')[0] || '',
+    lastName: state.user?.name?.split(' ').slice(1).join(' ') || '',
+    email: state.user?.email || '',
+    phone: state.user?.phone || '',
+    dateOfBirth: state.user?.date_of_birth || '',
     address: '', city: 'London', postcode: '', instructions: '',
     cardNumber: '', expiry: '', cvv: '', cardName: '',
     saveAddress: false,
   });
+
+  // Pre-fill address from localStorage if logged in
+  useEffect(() => {
+    if (state.user?.email) {
+      const saved = localStorage.getItem(`addresses_${state.user.email}`);
+      if (saved) {
+        try {
+          const addrList = JSON.parse(saved);
+          const defaultAddr = addrList[0]; // Take the first one as default
+          if (defaultAddr) {
+            setForm(f => ({
+              ...f,
+              address: defaultAddr.address || f.address,
+              city: defaultAddr.city || f.city,
+              postcode: defaultAddr.postcode || f.postcode,
+              instructions: defaultAddr.instructions || f.instructions,
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to parse saved addresses", e);
+        }
+      }
+    }
+  }, [state.user]);
 
   const cart = state.cart;
   const subtotal = cartTotal;
@@ -30,33 +70,79 @@ export default function CheckoutPage() {
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleOrder = () => {
-    if (!ageConfirmed) { alert('Please confirm your age.'); return; }
-    setSuccess(true);
-    dispatch({ type: 'CLEAR_CART' });
+  const validateStep0 = () => {
+    const { firstName, lastName, email, phone, dateOfBirth, address, postcode } = form;
+    if (!firstName || !lastName || !email || !phone || !dateOfBirth || !address || !postcode) {
+      toast.warning('Please fill in all required delivery fields.');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.warning('Please enter a valid email address.');
+      return false;
+    }
+    return true;
   };
 
-  if (success) return (
-    <div className={styles.successPage}>
-      <div className={styles.successCard}>
-        <CheckCircle size={64} className={styles.successIcon} />
-        <h1>Order Confirmed! 🎉</h1>
-        <p>Thank you for your order. Your premium drinks are being prepared for delivery.</p>
-        <div className={styles.orderDetails}>
-          <div className={styles.orderRef}>Order #BG-{Math.floor(Math.random()*100000)}</div>
-          <div className={styles.orderInfo}>
-            <div><Truck size={16} /> Estimated delivery: <strong>Within 90 minutes</strong></div>
-            <div><MapPin size={16} /> Delivery to: <strong>{form.address || '42 Example St, London'}</strong></div>
-          </div>
-        </div>
-        <p className={styles.trackNote}>📱 You will receive SMS updates with live tracking.</p>
-        <div className={styles.ageDeliveryNote}>
-          🔞 <strong>Remember:</strong> Our delivery partner will verify your age at the door. Please have valid ID ready if you appear under 25.
-        </div>
-        <Link to="/" className={styles.successBtn}>Back to Home</Link>
-      </div>
-    </div>
-  );
+  const validateStep1 = () => {
+    if (payMethod === 'card') {
+      const { cardNumber, expiry, cvv, cardName } = form;
+      if (!cardNumber || !expiry || !cvv || !cardName) {
+        toast.warning('Please fill in all card details.');
+        return false;
+      }
+      if (cardNumber.replace(/\s/g, '').length < 16) {
+        toast.warning('Invalid card number.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleOrder = async () => {
+    if (!ageConfirmed) {
+      toast.warning('Please confirm your age.');
+      return;
+    }
+
+    try {
+      const orderData = {
+        shipping_name: `${form.firstName} ${form.lastName}`,
+        shipping_address: form.address,
+        shipping_city: form.city,
+        shipping_postcode: form.postcode,
+        shipping_phone: form.phone,
+        notes: form.instructions,
+      };
+
+      // Sync the user's local cart to the backend before placing the order
+      await cartAPI.clear();
+      for (const item of cart) {
+        await cartAPI.add(item.id, item.quantity);
+      }
+
+      await ordersAPI.create(orderData);
+      clearCart();
+      // Navigate to the dedicated order confirmation page
+      navigate('/order-confirmation', {
+        state: {
+          address: form.address,
+          postcode: form.postcode,
+          payMethod,
+          cardNumber: form.cardNumber,
+          total,
+        },
+        replace: true,
+      });
+    } catch (err) {
+      // API errors are toasted automatically by apiFetch in api.js
+      // We only toast here if it wasn't an API error or for redundancy with specialized handling
+      if (!err.message.includes("Database error")) {
+        // Optionally toast if apiFetch somehow missed it or it's a logic error
+      }
+    }
+  };
+
+
 
   return (
     <main className={styles.main}>
@@ -84,19 +170,23 @@ export default function CheckoutPage() {
             {step === 0 && (
               <div className={styles.formCard}>
                 <h2><Truck size={20} /> Delivery Details</h2>
-                <div className={styles.guestOption}>
-                  <p>Already have an account? <Link to="/login">Sign in</Link> for faster checkout.</p>
-                </div>
+                {!state.user && (
+                  <div className={styles.guestOption}>
+                    <p>Already have an account? <Link to="/login">Sign in</Link> for faster checkout.</p>
+                  </div>
+                )}
                 <div className={styles.formGrid}>
                   {[
                     { name: 'firstName', label: 'First Name', placeholder: 'John' },
                     { name: 'lastName', label: 'Last Name', placeholder: 'Smith' },
                     { name: 'email', label: 'Email Address', placeholder: 'john@example.com', type: 'email', full: true },
                     { name: 'phone', label: 'Phone Number', placeholder: '+44 7700 900000', type: 'tel' },
+                    { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', note: 'Required to verify age' },
                   ].map(f => (
                     <div key={f.name} className={`${styles.formGroup} ${f.full ? styles.formGroupFull : ''}`}>
                       <label>{f.label}</label>
                       <input type={f.type || 'text'} name={f.name} value={form[f.name]} onChange={handleChange} placeholder={f.placeholder} required />
+                      {f.note && <small className={styles.fieldNote}>{f.note}</small>}
                     </div>
                   ))}
                   <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
@@ -120,7 +210,7 @@ export default function CheckoutPage() {
                   <input type="checkbox" name="saveAddress" checked={form.saveAddress} onChange={handleChange} />
                   Save this address for future orders
                 </label>
-                <button className={styles.nextBtn} onClick={() => setStep(1)}>Continue to Payment →</button>
+                <button className={styles.nextBtn} onClick={() => validateStep0() && setStep(1)}>Continue to Payment →</button>
               </div>
             )}
 
@@ -171,7 +261,7 @@ export default function CheckoutPage() {
                 )}
                 <div className={styles.stepBtns}>
                   <button className={styles.backBtn} onClick={() => setStep(0)}>← Back</button>
-                  <button className={styles.nextBtn} onClick={() => setStep(2)}>Review Order →</button>
+                  <button className={styles.nextBtn} onClick={() => validateStep1() && setStep(2)}>Review Order →</button>
                 </div>
               </div>
             )}
@@ -183,12 +273,12 @@ export default function CheckoutPage() {
                 <div className={styles.reviewItems}>
                   {cart.map(item => (
                     <div key={item.id} className={styles.reviewItem}>
-                      <img src={item.image} alt={item.name} />
+                      <CartItemImage item={item} />
                       <div className={styles.reviewItemInfo}>
                         <span>{item.name}</span>
-                        <span className={styles.reviewItemMeta}>Qty: {item.qty} · {item.volume}</span>
+                        <span className={styles.reviewItemMeta}>Qty: {item.quantity} · {item.volume}</span>
                       </div>
-                      <span className={styles.reviewItemPrice}>£{(item.price * item.qty).toFixed(2)}</span>
+                      <span className={styles.reviewItemPrice}>£{(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -219,9 +309,9 @@ export default function CheckoutPage() {
               <div className={styles.summaryItems}>
                 {cart.map(item => (
                   <div key={item.id} className={styles.summaryItem}>
-                    <div className={styles.summaryItemImg}><img src={item.image} alt={item.name} /></div>
-                    <div className={styles.summaryItemName}>{item.name}<br /><span>×{item.qty}</span></div>
-                    <div className={styles.summaryItemPrice}>£{(item.price * item.qty).toFixed(2)}</div>
+                    <div className={styles.summaryItemImg}><img src={getImageUrl(item.image || item.image_url)} alt={item.name} /></div>
+                    <div className={styles.summaryItemName}>{item.name}<br /><span>×{item.quantity}</span></div>
+                    <div className={styles.summaryItemPrice}>£{(item.price * item.quantity).toFixed(2)}</div>
                   </div>
                 ))}
               </div>

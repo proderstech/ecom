@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, Tag, ArrowRight, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Trash2, Plus, Minus, ShoppingBag, Tag, ArrowRight, Truck, Lock } from 'lucide-react';
+import { getImageUrl } from '../services/api';
+import CartItemImage from '../components/UI/CartItemImage';
+import { toast } from 'sonner';
 import { useStore } from '../context/StoreContext';
 import { DELIVERY_SLOTS } from '../data/products';
 import styles from './CartPage.module.css';
 
 export default function CartPage() {
-  const { state, dispatch, cartTotal } = useStore();
+  const { state, dispatch, cartTotal, removeFromCart, updateQty } = useStore();
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(DELIVERY_SLOTS[3].id);
-  const navigate = useNavigate();
 
   const cart = state.cart;
   const selectedSlotData = DELIVERY_SLOTS.find(s => s.id === selectedSlot);
@@ -25,7 +27,16 @@ export default function CartPage() {
     if (coupon.toLowerCase() === 'belgravia10') {
       setCouponApplied(true);
     } else {
-      alert('Invalid coupon code. Try: BELGRAVIA10');
+      toast.error('Invalid coupon code. Try: BELGRAVIA10');
+    }
+  };
+
+  const handleCheckout = () => {
+    if (!state.user) {
+      // Show auth modal — checkout requires login
+      dispatch({ type: 'SHOW_CHECKOUT_MODAL' });
+    } else {
+      window.location.href = '/checkout';
     }
   };
 
@@ -64,29 +75,36 @@ export default function CartPage() {
             {cart.map(item => (
               <div key={item.id} className={styles.item}>
                 <div className={styles.itemImg}>
-                  <img src={item.image} alt={item.name} />
+                  <CartItemImage item={item} />
                 </div>
                 <div className={styles.itemInfo}>
-                  <div className={styles.itemTag}>{item.category}</div>
+                  <div className={styles.itemTag}>{typeof item.category === 'object' && item.category !== null ? item.category.name : item.category}</div>
                   <Link to={`/product/${item.id}`} className={styles.itemName}>{item.name}</Link>
                   <div className={styles.itemMeta}>
                     {item.abv && <span>{item.abv}</span>}
-                    <span>{item.volume}</span>
+                    {item.volume && <span>{item.volume}</span>}
                   </div>
                   {item.abv && <div className={styles.ageTag}>🔞 18+ required</div>}
                 </div>
                 <div className={styles.itemControls}>
                   <div className={styles.qtyRow}>
-                    <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: item.id, qty: item.qty - 1 } })} disabled={item.qty <= 1}>
+                    <button
+                      onClick={() => updateQty(item.id, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                    >
                       <Minus size={14} />
                     </button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => dispatch({ type: 'UPDATE_QTY', payload: { id: item.id, qty: item.qty + 1 } })}>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => updateQty(item.id, item.quantity + 1)}>
                       <Plus size={14} />
                     </button>
                   </div>
-                  <div className={styles.itemPrice}>£{(item.price * item.qty).toFixed(2)}</div>
-                  <button className={styles.removeBtn} onClick={() => dispatch({ type: 'REMOVE_FROM_CART', payload: item.id })} aria-label="Remove">
+                  <div className={styles.itemPrice}>£{(item.price * item.quantity).toFixed(2)}</div>
+                  <button
+                    className={styles.removeBtn}
+                    onClick={() => removeFromCart(item.id)}
+                    aria-label="Remove"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -133,7 +151,7 @@ export default function CartPage() {
             <div className={styles.summaryCard}>
               <h3>Order Summary</h3>
               <div className={styles.totals}>
-                <div className={styles.totalRow}><span>Subtotal ({cart.reduce((s, i) => s + i.qty, 0)} items)</span><span>£{subtotal.toFixed(2)}</span></div>
+                <div className={styles.totalRow}><span>Subtotal ({cart.reduce((s, i) => s + i.quantity, 0)} items)</span><span>£{subtotal.toFixed(2)}</span></div>
                 {couponApplied && <div className={`${styles.totalRow} ${styles.discount}`}><span>💚 Promo Discount</span><span>-£{discount.toFixed(2)}</span></div>}
                 <div className={styles.totalRow}><span>Delivery ({selectedSlotData.label})</span><span>{delivery === 0 ? <span className={styles.free}>Free</span> : `£${delivery.toFixed(2)}`}</span></div>
                 <div className={styles.totalRow} style={{ fontSize: '11px', color: 'var(--light-grey)' }}><span>VAT (included in price)</span><span>£{vatAmount}</span></div>
@@ -143,12 +161,24 @@ export default function CartPage() {
 
               <div className={styles.checkboxRow}>
                 <input type="checkbox" id="ageConfirm" required />
-                <label htmlFor="ageConfirm">I confirm I am 18+ and accept the <Link to="/legal#terms">Terms & Conditions</Link>. Age verification may be required on delivery.</label>
+                <label htmlFor="ageConfirm">I confirm I am 18+ and accept the <Link to="/legal#terms">Terms &amp; Conditions</Link>. Age verification may be required on delivery.</label>
               </div>
 
-              <button className={styles.checkoutBtn} onClick={() => navigate('/checkout')}>
-                Proceed to Checkout <ArrowRight size={18} />
+              {/* Checkout button — shows auth modal if not logged in */}
+              <button className={styles.checkoutBtn} onClick={handleCheckout}>
+                {state.user ? (
+                  <>Proceed to Checkout <ArrowRight size={18} /></>
+                ) : (
+                  <><Lock size={16} /> Sign In to Checkout</>
+                )}
               </button>
+
+              {!state.user && (
+                <p className={styles.guestNote}>
+                  🔒 A free account is required to place your order. Your cart is saved!
+                </p>
+              )}
+
               <Link to="/shop" className={styles.continueBtn}>← Continue Shopping</Link>
             </div>
 

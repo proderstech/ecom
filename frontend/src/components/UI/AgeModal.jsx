@@ -1,6 +1,7 @@
 /* ── Age Verification Modal ── */
 import { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { AlertCircle } from 'lucide-react';
 import styles from './AgeModal.module.css';
 
 export default function AgeModal() {
@@ -63,7 +64,7 @@ export default function AgeModal() {
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error}><AlertCircle size={16} />{error}</p>}
             <button className={styles.btnConfirm} onClick={verify}>
               Confirm — I am 18 or over
             </button>
@@ -82,14 +83,7 @@ export default function AgeModal() {
             <p>We&apos;re sorry, but you must be 18 or over to access this website.</p>
             <p className={styles.deniedSub}>
               We take our responsibilities as a licensed alcohol retailer very seriously.
-              If you need help with alcohol, please visit{' '}
-              <a href="https://www.drinkaware.co.uk" target="_blank" rel="noopener noreferrer">
-                drinkaware.co.uk
-              </a>
             </p>
-            <button className={styles.btnDeny} onClick={() => window.location.href = 'https://www.drinkaware.co.uk'}>
-              Visit Drinkaware
-            </button>
           </div>
         )}
       </div>

@@ -42,6 +42,7 @@
 .addressActions { margin-top: 16px; font-size: 13px; color: var(--dark-grey); }
 .addressActions button { color: var(--light-grey); background: none; font-size: 13px; cursor: pointer; margin-right: 8px; }
 .addressActions button:hover { color: var(--gold); text-decoration: underline; }
+.addressList { display: flex; flex-direction: column; gap: 16px; }
 /* Wishlist */
 .productsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .empty { text-align: center; padding: 60px 20px; }
@@ -49,3 +50,32 @@
 .empty p { color: var(--light-grey); margin-bottom: 24px; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { position: static; flex-direction: row; overflow-x: auto; padding: 12px; } .navBtn { padding: 10px 14px; white-space: nowrap; } .grid { grid-template-columns: 1fr; } .productsGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .container { padding: 20px 16px; } .panel { padding: 20px; } .productsGrid { grid-template-columns: 1fr; } }
+.fieldNote { font-size: 11px; color: var(--light-grey); margin-top: 4px; display: block; }
+
+/* Address Form */
+.addressForm { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; padding: 20px; background: var(--charcoal-3); border: 1px solid var(--dark-grey); border-radius: var(--radius-sm); }
+.addressForm .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.addressForm .formGroup { display: flex; flex-direction: column; gap: 6px; }
+.addressForm .formGroup label { font-size: 11px; font-weight: 700; color: var(--silver); text-transform: uppercase; }
+.addressForm .formGroup input, .addressForm .formGroup textarea { background: var(--charcoal-2); border: 1px solid var(--dark-grey); border-radius: 4px; padding: 10px; color: var(--white); font-size: 14px; }
+.formBtns { display: flex; gap: 12px; margin-top: 8px; }
+.cancelBtn { background: transparent; border: 1px solid var(--dark-grey); color: var(--silver); padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cancelBtn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Expanded Order Details */
+.orderDetails { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--dark-grey); display: flex; flex-direction: column; gap: 20px; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.detailsGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.detailsSection h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+.detailsSection p { font-size: 13px; color: var(--silver); line-height: 1.6; margin: 0 0 4px 0; }
+.detailsSection p strong { color: var(--light-grey); }
+.grandTotal { margin-top: 8px !important; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 15px !important; }
+.grandTotal strong { color: var(--gold) !important; font-weight: 700; }
+.orderItemsList { display: flex; flex-direction: column; }
+.orderItemRow { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.orderItemRow:last-child { border-bottom: none; padding-bottom: 0; }
+.itemInfo { display: flex; flex-direction: column; gap: 4px; }
+.itemName { font-size: 14px; color: var(--white); font-weight: 600; }
+.itemMeta { font-size: 12px; color: var(--light-grey); }
+.itemPrice { font-size: 14px; font-weight: 700; color: var(--white); }
+@media (max-width: 600px) { .detailsGrid { grid-template-columns: 1fr; } }

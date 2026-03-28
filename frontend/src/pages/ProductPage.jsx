@@ -1,21 +1,51 @@
-import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { ShoppingCart, Heart, Star, Truck, Shield, Clock, ChevronLeft, ChevronRight, Plus, Minus, Share2 } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
+import { productsAPI, getImageUrl } from '../services/api';
 import { useStore } from '../context/StoreContext';
 import ProductCard from '../components/UI/ProductCard';
 import styles from './ProductPage.module.css';
 
 export default function ProductPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { dispatch, state } = useStore();
+  const { addToCart, toggleWishlist, state } = useStore();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [adding, setAdding] = useState(false);
 
-  const product = PRODUCTS.find(p => p.id === parseInt(id));
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [related, setRelated] = useState([]);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const data = await productsAPI.getBySlug(id);
+        setProduct(data);
+        // Fetch related products (e.g., others in same category)
+        if (data.category_id) {
+          const relatedData = await productsAPI.list({ category_id: data.category_id, limit: 5 });
+          setRelated(relatedData.items.filter(p => p.id !== data.id).slice(0, 4));
+        }
+      } catch (err) {
+        console.error("Failed to fetch product", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className={styles.container} style={{ minHeight: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className={styles.loader}>Loading bespoke selection...</div>
+      </div>
+    );
+  }
+
   if (!product) return (
     <div className={styles.notFound}>
       <div className={styles.nfIcon}>😕</div>
@@ -25,14 +55,20 @@ export default function ProductPage() {
   );
 
   const isWishlisted = state.wishlist.some(i => i.id === product.id);
-  const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const images = [product.image, product.image, product.image]; // In real app: multiple images
+  const categoryName = product.category?.name || 'Beverage';
+  const images = product.images?.length > 0 
+    ? product.images.map(img => getImageUrl(img.image_url)) 
+    : [getImageUrl(product.image_url)];
 
-  const addToCart = () => {
+  const handleAddToCart = () => {
+    if (product.stock === 0) return;
     setAdding(true);
-    dispatch({ type: 'ADD_TO_CART', payload: { ...product, qty: qty - 1 } });
-    for (let i = 0; i < qty; i++) dispatch({ type: 'ADD_TO_CART', payload: product });
-    setTimeout(() => { setAdding(false); navigate('/cart'); }, 600);
+    addToCart(product, qty);
+    setTimeout(() => setAdding(false), 800);
+  };
+
+  const handleWishlist = () => {
+    toggleWishlist(product);
   };
 
   const TABS = [
@@ -49,7 +85,7 @@ export default function ProductPage() {
         <div className={styles.breadcrumb}>
           <Link to="/">Home</Link><span>/</span>
           <Link to="/shop">Shop</Link><span>/</span>
-          <Link to={`/shop?cat=${product.category}`}>{product.category}</Link><span>/</span>
+          <Link to={`/shop?cat=${categoryName}`}>{categoryName}</Link><span>/</span>
           <span className={styles.current}>{product.name}</span>
         </div>
 
@@ -74,22 +110,22 @@ export default function ProductPage() {
           {/* ── Info ── */}
           <div className={styles.info}>
             <div className={styles.infoTop}>
-              <div className={styles.catTag}>{product.category} · {product.brand}</div>
+              <div className={styles.catTag}>{categoryName} · {product.brand}</div>
               <h1 className={styles.productName}>{product.name}</h1>
 
               {/* Rating */}
               <div className={styles.ratingRow}>
                 <div className={styles.stars}>
                   {[1,2,3,4,5].map(s => (
-                    <Star key={s} size={14} fill={s <= Math.round(product.rating) ? 'currentColor' : 'none'} />
+                    <Star key={s} size={14} fill={s <= Math.round(Number(product.rating || 0)) ? 'currentColor' : 'none'} />
                   ))}
                 </div>
-                <span>{product.rating} · 12 reviews</span>
+                <span>{product.rating || 0} · 12 reviews</span>
               </div>
 
               {/* Price */}
               <div className={styles.priceBlock}>
-                <span className={styles.price}>£{product.price.toFixed(2)}</span>
+                <span className={styles.price}>£{Number(product.price || 0).toFixed(2)}</span>
                 <span className={styles.vatLabel}>incl. VAT</span>
               </div>
 
@@ -111,8 +147,8 @@ export default function ProductPage() {
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Stock</span>
-                  <span className={`${styles.specValue} ${product.stock > 0 ? styles.inStock : styles.noStock}`}>
-                    {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+                  <span className={`${styles.specValue} ${product.stock_quantity > 0 ? styles.inStock : styles.noStock}`}>
+                    {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity})` : 'Out of Stock'}
                   </span>
                 </div>
               </div>
@@ -125,34 +161,42 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Qty + Add */}
+              {/* Qty + Add (No login required) */}
               <div className={styles.addRow}>
                 <div className={styles.qtySelector}>
                   <button onClick={() => setQty(q => Math.max(1, q - 1))}><Minus size={15} /></button>
                   <span>{qty}</span>
-                  <button onClick={() => setQty(q => Math.min(product.stock, q + 1))}><Plus size={15} /></button>
+                  <button onClick={() => setQty(q => Math.min(product.stock_quantity || 99, q + 1))}><Plus size={15} /></button>
                 </div>
                 <button
-                  className={`${styles.addBtn} ${adding ? styles.addingBtn : ''} ${product.stock === 0 ? styles.addDisabled : ''}`}
-                  onClick={addToCart}
-                  disabled={product.stock === 0}
+                  className={`${styles.addBtn} ${adding ? styles.addingBtn : ''} ${product.stock_quantity === 0 ? styles.addDisabled : ''}`}
+                  onClick={handleAddToCart}
+                  disabled={product.stock_quantity === 0}
                 >
                   <ShoppingCart size={18} />
-                  {adding ? 'Added! Going to cart…' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                  {adding ? 'Added! ✓' : product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
               </div>
 
               {/* Secondary actions */}
               <div className={styles.secondaryActions}>
+                {/* Wishlist — shows auth modal if not logged in */}
                 <button
                   className={`${styles.wishBtn} ${isWishlisted ? styles.wishlisted : ''}`}
-                  onClick={() => dispatch({ type: 'TOGGLE_WISHLIST', payload: product })}
+                  onClick={handleWishlist}
                 >
                   <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} />
-                  {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  {isWishlisted ? 'Wishlisted ❤️' : 'Add to Wishlist'}
                 </button>
                 <button className={styles.shareBtn}><Share2 size={16} /> Share</button>
               </div>
+
+              {/* Wishlist hint for guests */}
+              {!state.user && (
+                <p className={styles.wishlistHint}>
+                  💡 <em>Sign in to save items to your wishlist</em>
+                </p>
+              )}
             </div>
 
             {/* Delivery Infobars */}
@@ -186,7 +230,7 @@ export default function ProductPage() {
                   <tbody>
                     <tr><td>Name</td><td>{product.name}</td></tr>
                     <tr><td>Brand</td><td>{product.brand}</td></tr>
-                    <tr><td>Category</td><td>{product.category} — {product.subcategory}</td></tr>
+                    <tr><td>Category</td><td>{categoryName} — {product.subcategory}</td></tr>
                     {product.abv && <tr><td>ABV</td><td>{product.abv}</td></tr>}
                     <tr><td>Volume</td><td>{product.volume}</td></tr>
                     <tr><td>Country of Origin</td><td>{product.country}</td></tr>
@@ -218,8 +262,8 @@ export default function ProductPage() {
               <div className={styles.tabPanel}>
                 <div className={styles.reviewSummary}>
                   <div className={styles.reviewScore}>
-                    <span className={styles.bigScore}>{product.rating}</span>
-                    <div className={styles.reviewRatingStars}>{'★'.repeat(Math.round(product.rating))}</div>
+                    <span className={styles.bigScore}>{product.rating || 0}</span>
+                    <div className={styles.reviewRatingStars}>{'★'.repeat(Math.round(Number(product.rating || 0)))}</div>
                     <span className={styles.reviewCount}>12 reviews</span>
                   </div>
                 </div>
