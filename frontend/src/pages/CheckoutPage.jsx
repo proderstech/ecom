@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, CreditCard, Truck, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { ordersAPI, cartAPI, getImageUrl } from '../services/api';
+import { ordersAPI, cartAPI, addressesAPI, getImageUrl } from '../services/api';
 import { useStore } from '../context/StoreContext';
 import CartItemImage from '../components/UI/CartItemImage';
 import styles from './CheckoutPage.module.css';
@@ -36,14 +36,12 @@ export default function CheckoutPage() {
     saveAddress: false,
   });
 
-  // Pre-fill address from localStorage if logged in
+  // Pre-fill address from backend if logged in
   useEffect(() => {
-    if (state.user?.email) {
-      const saved = localStorage.getItem(`addresses_${state.user.email}`);
-      if (saved) {
-        try {
-          const addrList = JSON.parse(saved);
-          const defaultAddr = addrList[0]; // Take the first one as default
+    if (state.user) {
+      addressesAPI.list()
+        .then(addrList => {
+          const defaultAddr = addrList.find(a => a.is_default) || addrList[0];
           if (defaultAddr) {
             setForm(f => ({
               ...f,
@@ -53,16 +51,15 @@ export default function CheckoutPage() {
               instructions: defaultAddr.instructions || f.instructions,
             }));
           }
-        } catch (e) {
-          console.error("Failed to parse saved addresses", e);
-        }
-      }
+        })
+        .catch(err => console.error("Failed to fetch addresses", err));
     }
   }, [state.user]);
 
   const cart = state.cart;
   const subtotal = cartTotal;
-  const delivery = 2.99;
+  const FREE_DELIVERY_THRESHOLD = 50;
+  const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 2.99;
   const total = subtotal + delivery;
 
   const handleChange = (e) => {
@@ -114,6 +111,23 @@ export default function CheckoutPage() {
         notes: form.instructions,
       };
 
+      // If user wants to save address
+      if (form.saveAddress && state.user) {
+        try {
+          await addressesAPI.create({
+            name: orderData.shipping_name,
+            address: form.address,
+            city: form.city,
+            postcode: form.postcode,
+            instructions: form.instructions,
+            is_default: false
+          });
+        } catch (addrErr) {
+          console.error('Failed to save address:', addrErr);
+          // Don't block the order if saving address fails
+        }
+      }
+
       // Sync the user's local cart to the backend before placing the order
       await cartAPI.clear();
       for (const item of cart) {
@@ -135,10 +149,6 @@ export default function CheckoutPage() {
       });
     } catch (err) {
       // API errors are toasted automatically by apiFetch in api.js
-      // We only toast here if it wasn't an API error or for redundancy with specialized handling
-      if (!err.message.includes("Database error")) {
-        // Optionally toast if apiFetch somehow missed it or it's a logic error
-      }
     }
   };
 
@@ -309,7 +319,7 @@ export default function CheckoutPage() {
               <div className={styles.summaryItems}>
                 {cart.map(item => (
                   <div key={item.id} className={styles.summaryItem}>
-                    <div className={styles.summaryItemImg}><img src={getImageUrl(item.image || item.image_url)} alt={item.name} /></div>
+                    <div className={styles.summaryItemImg}><CartItemImage item={item} /></div>
                     <div className={styles.summaryItemName}>{item.name}<br /><span>×{item.quantity}</span></div>
                     <div className={styles.summaryItemPrice}>£{(item.price * item.quantity).toFixed(2)}</div>
                   </div>

@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.db.base import Base
 
 # Import all models for autogenerate to detect them
-from app.models import user, category, product, cart, order, review, wishlist, payment, coupon  # noqa
+from app.models import user, category, product, cart, order, review, wishlist, payment, coupon, address  # noqa
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("+aiomysql", "+pymysql"))

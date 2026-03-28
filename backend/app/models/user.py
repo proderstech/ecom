@@ -1,7 +1,11 @@
+from __future__ import annotations
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Boolean, Enum as SAEnum, Integer, Date, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from app.models.address import Address
 
 from app.db.base import Base, TimestampMixin
 from app.core.constants import UserRole
@@ -38,6 +42,9 @@ class User(Base, TimestampMixin):
     # Password reset
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     password_reset_expires: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    addresses: Mapped[list["Address"]] = relationship("Address", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email} role={self.role}>"

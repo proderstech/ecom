@@ -5,23 +5,20 @@ import { getImageUrl } from '../services/api';
 import CartItemImage from '../components/UI/CartItemImage';
 import { toast } from 'sonner';
 import { useStore } from '../context/StoreContext';
-import { DELIVERY_SLOTS } from '../data/products';
 import styles from './CartPage.module.css';
 
 export default function CartPage() {
   const { state, dispatch, cartTotal, removeFromCart, updateQty } = useStore();
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(DELIVERY_SLOTS[3].id);
 
   const cart = state.cart;
-  const selectedSlotData = DELIVERY_SLOTS.find(s => s.id === selectedSlot);
-  const delivery = cart.length > 0 ? selectedSlotData.fee : 0;
   const subtotal = cartTotal;
+  const FREE_DELIVERY_THRESHOLD = 50;
+  const delivery = cart.length > 0 ? (subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 2.99) : 0;
   const discount = couponApplied ? subtotal * 0.1 : 0;
   const total = Math.max(0, subtotal - discount + delivery);
   const vatAmount = (total * 0.2).toFixed(2);
-  const FREE_DELIVERY_THRESHOLD = 50;
 
   const applyCoupon = () => {
     if (coupon.toLowerCase() === 'belgravia10') {
@@ -114,25 +111,6 @@ export default function CartPage() {
 
           {/* ── Order Summary ── */}
           <div className={styles.summary}>
-            {/* Delivery Slots */}
-            <div className={styles.summaryCard}>
-              <h3>Choose Delivery Slot</h3>
-              <div className={styles.slots}>
-                {DELIVERY_SLOTS.map(slot => (
-                  <label key={slot.id} className={`${styles.slot} ${selectedSlot === slot.id ? styles.slotActive : ''}`}>
-                    <input type="radio" name="slot" value={slot.id} checked={selectedSlot === slot.id} onChange={() => setSelectedSlot(slot.id)} />
-                    <div className={styles.slotContent}>
-                      <div className={styles.slotIcon}>{slot.icon}</div>
-                      <div className={styles.slotInfo}>
-                        <span className={styles.slotLabel}>{slot.label}</span>
-                        <span className={styles.slotTime}>{slot.time}</span>
-                      </div>
-                      <div className={styles.slotFee}>{slot.fee === 0 ? <span className={styles.free}>Free</span> : `£${slot.fee.toFixed(2)}`}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
 
             {/* Coupon */}
             <div className={styles.summaryCard}>
@@ -153,7 +131,7 @@ export default function CartPage() {
               <div className={styles.totals}>
                 <div className={styles.totalRow}><span>Subtotal ({cart.reduce((s, i) => s + i.quantity, 0)} items)</span><span>£{subtotal.toFixed(2)}</span></div>
                 {couponApplied && <div className={`${styles.totalRow} ${styles.discount}`}><span>💚 Promo Discount</span><span>-£{discount.toFixed(2)}</span></div>}
-                <div className={styles.totalRow}><span>Delivery ({selectedSlotData.label})</span><span>{delivery === 0 ? <span className={styles.free}>Free</span> : `£${delivery.toFixed(2)}`}</span></div>
+                <div className={styles.totalRow}><span>Delivery</span><span>{delivery === 0 ? <span className={styles.free}>Free</span> : `£${delivery.toFixed(2)}`}</span></div>
                 <div className={styles.totalRow} style={{ fontSize: '11px', color: 'var(--light-grey)' }}><span>VAT (included in price)</span><span>£{vatAmount}</span></div>
                 <div className={styles.divider} />
                 <div className={`${styles.totalRow} ${styles.grandTotal}`}><span>Total</span><span>£{total.toFixed(2)}</span></div>

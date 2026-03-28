@@ -37,13 +37,6 @@ export const CATEGORIES = [
   { id: 'groceries', label: 'Groceries',      icon: '🛒', count: 4, desc: 'Fresh & Everyday Essentials' },
 ];
 
-export const DELIVERY_SLOTS = [
-  { id: 'slot1', label: 'ASAP (1-2 hrs)',       time: 'Today, within 2 hours',   fee: 4.99, icon: '⚡' },
-  { id: 'slot2', label: '12:00 – 14:00',         time: 'Today, midday window',     fee: 2.99, icon: '☀️' },
-  { id: 'slot3', label: '16:00 – 18:00',         time: 'Today, afternoon',         fee: 2.99, icon: '🌤️' },
-  { id: 'slot4', label: '18:00 – 20:00',         time: 'Today, evening',           fee: 0,    icon: '🌙' },
-  { id: 'slot5', label: '20:00 – 22:00',         time: 'Today, late evening',      fee: 0,    icon: '🌃' },
-];
 
 export const REVIEWS = [
   { id: 1, name: 'James H.', location: 'Chelsea', rating: 5, text: 'Absolutely brilliant service. Ordered at 6pm and had my Macallan in under an hour. The best liquor delivery in London, hands down.', date: '2 days ago', avatar: 'JH' },

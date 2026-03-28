@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Link, useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ordersAPI, usersAPI } from '../services/api';
+import { ordersAPI, usersAPI, addressesAPI } from '../services/api';
 import { Package, User, MapPin, Heart, LogOut, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import ProductCard from '../components/UI/ProductCard';
@@ -25,20 +25,20 @@ export default function AccountPage() {
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   // Address Management
-  const [addresses, setAddresses] = useState(() => {
-    const saved = localStorage.getItem(`addresses_${state.user?.email}`);
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: state.user?.name, address: '42 Example Street', city: 'London', postcode: 'SW1X 8LR', instructions: 'Please leave in porch if not in.' }
-    ];
-  });
+  const [addresses, setAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressForm, setAddressForm] = useState({ id: null, name: state.user?.name || '', address: '', city: 'London', postcode: '', instructions: '' });
 
   useEffect(() => {
-    if (state.user?.email) {
-      localStorage.setItem(`addresses_${state.user.email}`, JSON.stringify(addresses));
+    if (tab === 'addresses' && state.user) {
+      setLoadingAddresses(true);
+      addressesAPI.list()
+        .then(setAddresses)
+        .catch(err => console.error('Failed to fetch addresses:', err))
+        .finally(() => setLoadingAddresses(false));
     }
-  }, [addresses, state.user?.email]);
+  }, [tab, state.user]);
 
   // Sync tab with URL
   useEffect(() => {
@@ -102,17 +102,28 @@ export default function AccountPage() {
     }
   };
 
-  const handleSaveAddress = (e) => {
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
     if (!addressForm.address || !addressForm.postcode) return toast.warning('Address and Postcode are required');
     
-    if (addressForm.id) {
-      setAddresses(prev => prev.map(a => a.id === addressForm.id ? { ...addressForm } : a));
-    } else {
-      setAddresses(prev => [...prev, { ...addressForm, id: Date.now() }]);
+    setUpdating(true);
+    try {
+      if (addressForm.id) {
+        const updated = await addressesAPI.update(addressForm.id, addressForm);
+        setAddresses(prev => prev.map(a => a.id === addressForm.id ? updated : a));
+        toast.success('Address updated');
+      } else {
+        const created = await addressesAPI.create(addressForm);
+        setAddresses(prev => [created, ...prev]);
+        toast.success('Address saved');
+      }
+      setShowAddressForm(false);
+      setAddressForm({ id: null, name: state.user?.name || '', address: '', city: 'London', postcode: '', instructions: '' });
+    } catch (err) {
+      // API error toasted by apiFetch
+    } finally {
+      setUpdating(false);
     }
-    setShowAddressForm(false);
-    setAddressForm({ id: null, name: state.user?.name || '', address: '', city: 'London', postcode: '', instructions: '' });
   };
 
   const handleEditAddress = (addr) => {
@@ -120,9 +131,15 @@ export default function AccountPage() {
     setShowAddressForm(true);
   };
 
-  const handleDeleteAddress = (id) => {
+  const handleDeleteAddress = async (id) => {
     if (window.confirm('Are you sure you want to delete this address?')) {
-      setAddresses(prev => prev.filter(a => a.id !== id));
+      try {
+        await addressesAPI.delete(id);
+        setAddresses(prev => prev.filter(a => a.id !== id));
+        toast.success('Address deleted');
+      } catch (err) {
+        // API error toasted by apiFetch
+      }
     }
   };
 
@@ -309,17 +326,26 @@ export default function AccountPage() {
                 )}
 
                 <div className={styles.addressList}>
-                  {addresses.length === 0 ? (
+                  {loadingAddresses ? (
+                    <div className={styles.loading}><RefreshCw className={styles.spinning} /> Loading...</div>
+                  ) : addresses.length === 0 ? (
                     <div className={styles.empty}>No saved addresses.</div>
                   ) : (
                     addresses.map((addr, idx) => (
                       <div key={addr.id} className={styles.addressCard}>
-                        {idx === 0 && <div className={styles.badge}>Default</div>}
+                        {addr.is_default && <div className={styles.badge}>Default</div>}
                         <strong>{addr.name}</strong>
                         <p>{addr.address}<br />{addr.city}{addr.city && ', '}{addr.postcode}</p>
                         {addr.instructions && <p><em>Instructions: {addr.instructions}</em></p>}
                         <div className={styles.addressActions}>
                           <button onClick={() => handleEditAddress(addr)}>Edit</button> | <button onClick={() => handleDeleteAddress(addr.id)}>Delete</button>
+                          {!addr.is_default && (
+                            <> | <button onClick={async () => {
+                              const updated = await addressesAPI.update(addr.id, { is_default: true });
+                              addressesAPI.list().then(setAddresses);
+                              toast.success('Default address updated');
+                            }}>Set as Default</button></>
+                          )}
                         </div>
                       </div>
                     ))

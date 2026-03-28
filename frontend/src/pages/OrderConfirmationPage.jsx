@@ -59,7 +59,7 @@ export default function OrderConfirmationPage() {
               <div>
                 <span className={styles.detailLabel}>Delivery Address</span>
                 <span className={styles.detailValue}>
-                  {address || '42 Example Street'}{postcode ? `, ${postcode}` : ''}
+                  {address || 'Address not found'}{postcode ? `, ${postcode}` : ''}
                 </span>
               </div>
             </div>

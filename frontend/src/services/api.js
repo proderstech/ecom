@@ -179,6 +179,14 @@ export const usersAPI = {
   update: (data) => apiFetch('/users/me', { method: 'PUT', body: JSON.stringify(data) }),
 };
 
+// ── Addresses ─────────────────────────────────────────────────────────────
+export const addressesAPI = {
+  list: () => apiFetch('/addresses/'),
+  create: (data) => apiFetch('/addresses/', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/addresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/addresses/${id}`, { method: 'DELETE' }),
+};
+
 // ── Admin ─────────────────────────────────────────────────────────────────
 export const adminAPI = {
   // Stats

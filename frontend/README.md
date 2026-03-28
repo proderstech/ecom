@@ -41,7 +41,6 @@ This handles:
 - Cart Management (add, remove, clear items)
 - Total calculations and shipping logic
 - User State (Guest vs Logged In Authentication states)
-- Delivery Slot selection
 
 ## Global Design System (`src/index.css`)
 To maintain consistency and provide a centralized location for theming (such as Light / Dark Mode toggles), the application uses native CSS Variables / Custom Properties declared in `index.css`. This includes properties for brand colors (`--gold`, `--charcoal`, `--white`), gradients, typography (Playfair Display for headings and Inter for body text), rounded corners (`--radius`), shadow profiles and dynamic alpha channels.
