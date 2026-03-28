@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, Heart, Search, User, Menu, X, ChevronDown, LogOut, LayoutDashboard, Truck } from 'lucide-react';
+import { ShoppingCart, Heart, Search, User, Menu, X, ChevronDown, LogOut, LayoutDashboard } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { categoriesAPI } from '../../services/api';
 import styles from './Header.module.css';
@@ -255,7 +255,7 @@ export default function Header() {
             )}
             
             <div className={styles.mobileDivider} />
-            <Link to="/delivery" className={styles.mobileLinkSmall}><Truck size={16} /> Delivery Partner</Link>
+
             <Link to="/legal" className={styles.mobileLinkSmall}>Terms & Conditions</Link>
           </div>
         </div>

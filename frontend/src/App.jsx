@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
 import AgeModal from './components/UI/AgeModal';
@@ -22,7 +22,7 @@ import ContactPage from './pages/ContactPage';
 
 // Portals
 import AdminDashboard from './pages/AdminDashboard';
-import DeliveryDashboard from './pages/DeliveryDashboard';
+
 
 // Layout wrapping the public site
 const StoreLayout = () => (
@@ -77,7 +77,9 @@ function App() {
 
         {/* Portals (No Header/Footer) */}
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/delivery" element={<DeliveryDashboard />} />
+        {/* Wildcard catch-all - redirect invalid URLs to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   );
