@@ -94,3 +94,25 @@
 .successBtn:hover { box-shadow: var(--shadow-gold); }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .orderSummary { position: static; order: -1; } }
 @media (max-width: 600px) { .container { padding: 0 16px 50px; } .formCard { padding: 20px; } .formGrid { grid-template-columns: 1fr; } .stepIndicator { gap: 4px; } .stepLine { width: 24px; } .successCard { padding: 32px 20px; } }
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loadingPayment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 40px;
+  color: var(--light-grey);
+  background: var(--charcoal-3);
+  border: 1px dashed var(--dark-grey);
+  border-radius: var(--radius-sm);
+}

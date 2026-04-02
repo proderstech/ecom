@@ -50,3 +50,4 @@ anyio==4.4.0
 # Dev utilities
 python-dotenv==1.0.1
 structlog==24.1.0
+stripe==10.12.0

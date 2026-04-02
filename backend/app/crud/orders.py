@@ -34,6 +34,9 @@ async def create_order(db: AsyncSession, user_id: int, data: OrderCreate, items_
         shipping_phone=data.shipping_phone,
         notes=data.notes,
         coupon_code=data.coupon_code,
+        payment_method=data.payment_method,
+        stripe_payment_intent_id=data.stripe_payment_intent_id,
+        payment_status="paid" if data.stripe_payment_intent_id else "pending",
     )
     db.add(order)
     await db.flush()

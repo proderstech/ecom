@@ -8,6 +8,7 @@ from app.api.routes.cart import router as cart_router
 from app.api.routes.orders import router as orders_router
 from app.api.routes.reviews import reviews_router, wishlist_router
 from app.api.routes.addresses import router as addresses_router
+from app.api.routes.payments import router as payments_router
 from app.api.routes.admin.admin_router import admin_router
 from app.api.routes.admin.analytics import analytics_router
 
@@ -24,3 +25,4 @@ api_router.include_router(wishlist_router)
 api_router.include_router(admin_router)
 api_router.include_router(analytics_router)
 api_router.include_router(addresses_router)
+api_router.include_router(payments_router)

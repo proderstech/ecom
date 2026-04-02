@@ -47,8 +47,8 @@ export default function ShopPage() {
       }
 
       const data = await productsAPI.list({
-        page, 
-        limit: 12, 
+        page,
+        limit: 12,
         sort,
         search: query || undefined,
         category_id: categoryId || undefined,
@@ -64,8 +64,8 @@ export default function ShopPage() {
     }
   }, [page, sort, priceRange, selectedCatName, query, categories]);
 
-  useEffect(() => { 
-    fetchProducts(); 
+  useEffect(() => {
+    fetchProducts();
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -81,15 +81,15 @@ export default function ShopPage() {
   };
 
   const currentCategoryName = useMemo(() => {
-     return selectedCatName || null;
+    return selectedCatName || null;
   }, [selectedCatName]);
 
   const SidebarContent = () => (
     <div className={styles.sidebar}>
       <div className={styles.sidebarSection}>
         <div className={styles.sidebarHeader}>
-           <Filter size={16} />
-           <span>Filters</span>
+          <Filter size={16} />
+          <span>Filters</span>
         </div>
         <button className={styles.clearAll} onClick={clearFilters}>Reset All</button>
       </div>
@@ -99,12 +99,12 @@ export default function ShopPage() {
         <h4 className={styles.blockTitle}>Categories</h4>
         <div className={styles.catList}>
           {categories.map(cat => (
-            <button 
+            <button
               key={cat.id}
               className={`${styles.catItem} ${selectedCatName === cat.name ? styles.catActive : ''}`}
               onClick={() => setCat(cat.name)}
             >
-              <span className={styles.catIcon}>{cat.icon || '🍷'}</span>
+              <span className={styles.catIcon}>{cat.icon}</span>
               <span className={styles.catName}>{cat.name}</span>
             </button>
           ))}
@@ -115,18 +115,18 @@ export default function ShopPage() {
       <div className={styles.filterBlock}>
         <h4 className={styles.blockTitle}>Price (GBP)</h4>
         <div className={styles.priceInputs}>
-           <div className={styles.priceSlider}>
-             <input 
-               type="range" 
-               min="0" max="500" step="10"
-               value={priceRange[1]}
-               onChange={e => setPriceRange([0, parseInt(e.target.value)])}
-             />
-             <div className={styles.priceLabels}>
-                <span>£0</span>
-                <span>£{priceRange[1]}{priceRange[1] === 500 ? '+' : ''}</span>
-             </div>
-           </div>
+          <div className={styles.priceSlider}>
+            <input
+              type="range"
+              min="0" max="500" step="10"
+              value={priceRange[1]}
+              onChange={e => setPriceRange([0, parseInt(e.target.value)])}
+            />
+            <div className={styles.priceLabels}>
+              <span>£0</span>
+              <span>£{priceRange[1]}{priceRange[1] === 500 ? '+' : ''}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -156,38 +156,38 @@ export default function ShopPage() {
           <div className={styles.content}>
             {/* Toolbar */}
             <div className={styles.toolbar}>
-               <button className={styles.mobileFilterBtn} onClick={() => setMobileSidebar(true)}>
-                 <SlidersHorizontal size={16} /> Filters
-               </button>
-               
-               <div className={styles.toolGroup}>
-                 <div className={styles.sortContainer}>
-                   <span>Sort:</span>
-                   <select value={sort} onChange={e => setSort(e.target.value)}>
-                     {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                   </select>
-                 </div>
-                 <div className={styles.viewToggle}>
-                   <button 
+              <button className={styles.mobileFilterBtn} onClick={() => setMobileSidebar(true)}>
+                <SlidersHorizontal size={16} /> Filters
+              </button>
+
+              <div className={styles.toolGroup}>
+                <div className={styles.sortContainer}>
+                  <span>Sort:</span>
+                  <select value={sort} onChange={e => setSort(e.target.value)}>
+                    {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div className={styles.viewToggle}>
+                  <button
                     className={`${styles.viewBtn} ${view === 'grid' ? styles.viewActive : ''}`}
                     onClick={() => setView('grid')}
-                   >
-                     <Grid3X3 size={18} />
-                   </button>
-                   <button 
+                  >
+                    <Grid3X3 size={18} />
+                  </button>
+                  <button
                     className={`${styles.viewBtn} ${view === 'list' ? styles.viewActive : ''}`}
                     onClick={() => setView('list')}
-                   >
-                     <List size={18} />
-                   </button>
-                 </div>
-               </div>
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* List/Grid */}
             {loading ? (
               <div className={styles.productsGrid}>
-                {[1,2,3,4,5,6].map(i => (
+                {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className={styles.skeletonCard} />
                 ))}
               </div>
@@ -206,9 +206,9 @@ export default function ShopPage() {
 
             {/* Pagination Placeholder */}
             {total > products.length && (
-               <div className={styles.loadMore}>
-                 <button onClick={() => setPage(p => p + 1)} className={styles.loadBtn}>Load More Products</button>
-               </div>
+              <div className={styles.loadMore}>
+                <button onClick={() => setPage(p => p + 1)} className={styles.loadBtn}>Load More Products</button>
+              </div>
             )}
           </div>
         </div>
@@ -223,7 +223,7 @@ export default function ShopPage() {
               <button onClick={() => setMobileSidebar(false)}><X size={20} /></button>
             </div>
             <div className={styles.mobileSidebarBody}>
-               <SidebarContent />
+              <SidebarContent />
             </div>
             <button className={styles.mobileApply} onClick={() => setMobileSidebar(false)}>
               Show {total} Results

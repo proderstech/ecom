@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, CreditCard, Truck, ChevronDown } from 'lucide-react';
+import { Lock, CreditCard, Truck, ChevronDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ordersAPI, cartAPI, addressesAPI, getImageUrl } from '../services/api';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { ordersAPI, cartAPI, addressesAPI, paymentsAPI, getImageUrl } from '../services/api';
 import { useStore } from '../context/StoreContext';
 import CartItemImage from '../components/UI/CartItemImage';
+import StripePaymentForm from '../components/Checkout/StripePaymentForm';
 import styles from './CheckoutPage.module.css';
 
 const STEPS = ['Delivery', 'Payment', 'Review'];
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 export default function CheckoutPage() {
   const { state, dispatch, cartTotal, clearCart } = useStore();
@@ -25,6 +29,8 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const [payMethod, setPayMethod] = useState('card');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
   const [form, setForm] = useState({
     firstName: state.user?.name?.split(' ')[0] || '',
     lastName: state.user?.name?.split(' ').slice(1).join(' ') || '',
@@ -67,7 +73,7 @@ export default function CheckoutPage() {
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const validateStep0 = () => {
+  const validateStep0 = async () => {
     const { firstName, lastName, email, phone, dateOfBirth, address, postcode } = form;
     if (!firstName || !lastName || !email || !phone || !dateOfBirth || !address || !postcode) {
       toast.warning('Please fill in all required delivery fields.');
@@ -77,31 +83,58 @@ export default function CheckoutPage() {
       toast.warning('Please enter a valid email address.');
       return false;
     }
+
+    // After validating step 0, we create the PaymentIntent
+    if (!clientSecret) {
+      try {
+        setIsProcessing(true);
+        // Stripe expects amount in lowest denom (pence/cents)
+        const amountInPence = Math.round(total * 100);
+        const data = await paymentsAPI.createPaymentIntent(amountInPence);
+        setClientSecret(data.clientSecret);
+        return true;
+      } catch (err) {
+        console.error("Failed to create payment intent", err);
+        return false;
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+
     return true;
   };
 
+  const handleNextFromStep0 = async () => {
+    const ok = await validateStep0();
+    if (ok) setStep(1);
+  };
+
   const validateStep1 = () => {
-    if (payMethod === 'card') {
-      const { cardNumber, expiry, cvv, cardName } = form;
-      if (!cardNumber || !expiry || !cvv || !cardName) {
-        toast.warning('Please fill in all card details.');
-        return false;
-      }
-      if (cardNumber.replace(/\s/g, '').length < 16) {
-        toast.warning('Invalid card number.');
-        return false;
-      }
+    if (payMethod === 'card' && !clientSecret) {
+      toast.error('Payment system not ready. Please go back and try again.');
+      return false;
     }
     return true;
   };
 
-  const handleOrder = async () => {
+  const handleOrder = async (stripePaymentIntentId = null) => {
     if (!ageConfirmed) {
       toast.warning('Please confirm your age.');
       return;
     }
 
+    if (payMethod === 'card' && !stripePaymentIntentId) {
+      // If we're using card, the final button should trigger confirmPayment first.
+      // We'll handle this by triggering the submit in the child form.
+      const formEl = document.getElementById('payment-form');
+      if (formEl) {
+        formEl.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+      return;
+    }
+
     try {
+      setIsProcessing(true);
       const orderData = {
         shipping_name: `${form.firstName} ${form.lastName}`,
         shipping_address: form.address,
@@ -109,6 +142,8 @@ export default function CheckoutPage() {
         shipping_postcode: form.postcode,
         shipping_phone: form.phone,
         notes: form.instructions,
+        payment_method: payMethod,
+        stripe_payment_intent_id: stripePaymentIntentId,
       };
 
       // If user wants to save address
@@ -129,6 +164,7 @@ export default function CheckoutPage() {
       }
 
       // Sync the user's local cart to the backend before placing the order
+      // We'll do this only if not already done, but keeping it simple for now
       await cartAPI.clear();
       for (const item of cart) {
         await cartAPI.add(item.id, item.quantity);
@@ -144,11 +180,14 @@ export default function CheckoutPage() {
           payMethod,
           cardNumber: form.cardNumber,
           total,
+          stripePaymentIntentId
         },
         replace: true,
       });
     } catch (err) {
       // API errors are toasted automatically by apiFetch in api.js
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -220,7 +259,9 @@ export default function CheckoutPage() {
                   <input type="checkbox" name="saveAddress" checked={form.saveAddress} onChange={handleChange} />
                   Save this address for future orders
                 </label>
-                <button className={styles.nextBtn} onClick={() => validateStep0() && setStep(1)}>Continue to Payment →</button>
+                <button className={styles.nextBtn} disabled={isProcessing} onClick={handleNextFromStep0}>
+                  {isProcessing ? <Loader2 className={styles.spin} size={18} /> : 'Continue to Payment →'}
+                </button>
               </div>
             )}
 
@@ -243,35 +284,12 @@ export default function CheckoutPage() {
                     </label>
                   ))}
                 </div>
-                {payMethod === 'card' && (
-                  <div className={styles.cardForm}>
-                    <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                      <label>Card Number</label>
-                      <input type="text" name="cardNumber" value={form.cardNumber} onChange={handleChange} placeholder="1234 5678 9012 3456" maxLength={19} />
-                    </div>
-                    <div className={styles.formGrid}>
-                      <div className={styles.formGroup}>
-                        <label>Expiry Date</label>
-                        <input type="text" name="expiry" value={form.expiry} onChange={handleChange} placeholder="MM/YY" maxLength={5} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>CVV</label>
-                        <input type="text" name="cvv" value={form.cvv} onChange={handleChange} placeholder="123" maxLength={4} />
-                      </div>
-                      <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                        <label>Name on Card</label>
-                        <input type="text" name="cardName" value={form.cardName} onChange={handleChange} placeholder="John Smith" />
-                      </div>
-                    </div>
-                    <div className={styles.secureNote}><Lock size={12} /> Your payment is secured with 256-bit SSL encryption via Stripe.</div>
-                  </div>
-                )}
                 {payMethod === 'paypal' && (
                   <div className={styles.paypalNote}>You will be redirected to PayPal to complete your payment securely.</div>
                 )}
                 <div className={styles.stepBtns}>
                   <button className={styles.backBtn} onClick={() => setStep(0)}>← Back</button>
-                  <button className={styles.nextBtn} onClick={() => validateStep1() && setStep(2)}>Review Order →</button>
+                  <button className={styles.nextBtn} onClick={() => setStep(2)}>Review Order →</button>
                 </div>
               </div>
             )}
@@ -294,8 +312,26 @@ export default function CheckoutPage() {
                 </div>
                 <div className={styles.reviewSummary}>
                   <div className={styles.reviewRow}><span>Delivery to</span><strong>{form.address || 'Address not entered'}, {form.postcode}</strong></div>
-                  <div className={styles.reviewRow}><span>Payment</span><strong>{payMethod === 'card' ? `Card ending ****${form.cardNumber.slice(-4) || '****'}` : payMethod.toUpperCase()}</strong></div>
+                  <div className={styles.reviewRow}><span>Payment</span><strong>{payMethod === 'card' ? '🔒 Secure Card via Stripe' : payMethod.toUpperCase()}</strong></div>
                 </div>
+
+                {/* Stripe card form — rendered here so it's mounted when Place Order fires */}
+                {payMethod === 'card' && clientSecret && (
+                  <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#c9a84c', colorBackground: '#1a1a1a', colorText: '#ffffff', colorDanger: '#ef4444' } } }}>
+                    <StripePaymentForm
+                      onPaymentSuccess={handleOrder}
+                      total={total}
+                      isProcessing={isProcessing}
+                      setIsProcessing={setIsProcessing}
+                    />
+                  </Elements>
+                )}
+                {payMethod === 'card' && !clientSecret && (
+                  <div className={styles.loadingPayment}>
+                    <Loader2 className={styles.spin} /> Loading secure payment form...
+                  </div>
+                )}
+
                 <div className={styles.ageConfirm}>
                   <label className={styles.checkLabel}>
                     <input type="checkbox" checked={ageConfirmed} onChange={e => setAgeConfirmed(e.target.checked)} />
@@ -304,8 +340,21 @@ export default function CheckoutPage() {
                 </div>
                 <div className={styles.stepBtns}>
                   <button className={styles.backBtn} onClick={() => setStep(1)}>← Back</button>
-                  <button className={styles.placeBtn} onClick={handleOrder}>
-                    <Lock size={16} /> Place Order — £{total.toFixed(2)}
+                  <button
+                    className={styles.placeBtn}
+                    disabled={isProcessing}
+                    onClick={() => {
+                      if (!ageConfirmed) { toast.warning('Please confirm your age.'); return; }
+                      if (payMethod === 'card') {
+                        const formEl = document.getElementById('payment-form');
+                        if (formEl) formEl.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                      } else {
+                        handleOrder();
+                      }
+                    }}
+                  >
+                    {isProcessing ? <Loader2 className={styles.spin} size={18} /> : <Lock size={16} />}
+                    {isProcessing ? 'Processing...' : `Place Order — £${total.toFixed(2)}`}
                   </button>
                 </div>
               </div>

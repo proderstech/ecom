@@ -29,6 +29,8 @@ class Order(Base, TimestampMixin):
         default=PaymentStatus.PENDING, nullable=False
     )
     coupon_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    payment_method: Mapped[str] = mapped_column(String(50), default="card", nullable=False)
+    stripe_payment_intent_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Shipping address (denormalized for order snapshot)

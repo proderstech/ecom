@@ -47,6 +47,8 @@ class OrderCreate(BaseModel):
     shipping_phone: str
     notes: Optional[str] = None
     coupon_code: Optional[str] = None
+    payment_method: Optional[str] = "card"
+    stripe_payment_intent_id: Optional[str] = None
 
 
 class OrderItemResponse(BaseModel):

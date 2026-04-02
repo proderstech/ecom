@@ -230,3 +230,12 @@ export const adminAPI = {
   activateUser: (id) => apiFetch(`/admin/users/${id}/activate`, { method: 'PUT' }),
   promoteToAdmin: (id) => apiFetch(`/admin/users/${id}/promote`, { method: 'PUT' }),
 };
+
+// ── Payments ──────────────────────────────────────────────────────────────
+export const paymentsAPI = {
+  createPaymentIntent: (amount, currency = 'gbp') => 
+    apiFetch('/payments/create-payment-intent', { 
+      method: 'POST', 
+      body: JSON.stringify({ amount, currency }) 
+    }),
+};
