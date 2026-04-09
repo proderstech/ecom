@@ -275,3 +275,112 @@
   .panel { padding: 20px; }
   .formGrid { grid-template-columns: 1fr; }
 }
+
+/* Order Details Modal */
+.orderModalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.orderSection {
+  background: var(--charcoal-2);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+.orderSection h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.orderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.infoPair {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.infoPair span {
+  font-size: 11px;
+  color: var(--silver);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.infoPair strong {
+  font-size: 14px;
+  color: var(--white);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.orderItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.orderItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--charcoal);
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.orderItemName {
+  font-weight: 600;
+  color: var(--white);
+  font-size: 15px;
+}
+.orderItemQty {
+  color: var(--silver);
+  font-size: 13px;
+  margin-left: 8px;
+}
+.orderItemPrice {
+  font-weight: 700;
+  color: var(--gold);
+  font-size: 16px;
+}
+.totalsBreakdown {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+}
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  color: var(--light-grey);
+  font-size: 14px;
+}
+.totalRow.discount {
+  color: #10B981;
+}
+.totalRow.grandTotal {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 16px;
+  margin-top: 8px;
+}
+.modalActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}

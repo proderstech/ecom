@@ -45,10 +45,10 @@ export default function HomePage() {
   useEffect(() => {
     Promise.all([
       productsAPI.featured(8),
-      productsAPI.list({ limit: 8 }),
+      productsAPI.list({ limit: 7 }),
       categoriesAPI.list(),
     ]).then(([featured, all, cats]) => {
-      setFeaturedProducts(featured?.items || []);
+      setFeaturedProducts(Array.isArray(featured) ? featured : featured?.items || []);
       setAllProducts(all?.items || []);
       setCategories(cats || []);
     }).catch(console.error).finally(() => setLoading(false));
@@ -153,10 +153,10 @@ export default function HomePage() {
             <div><p className={styles.sectionLabel}>Hand-Picked for You</p><h2>Featured Products</h2></div>
             <Link to="/shop" className={styles.viewAll}>View All <ArrowRight size={15} /></Link>
           </div>
-          <div className={styles.productsGrid}>
+          <div className={styles.scrollableGrid}>
             {loading
-              ? Array(4).fill(0).map((_, i) => <div key={i} style={{ height: '320px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />)
-              : featuredProducts.map(p => <ProductCard key={p.id} product={p} />)
+              ? Array(8).fill(0).map((_, i) => <div key={i} className={styles.scrollableItem} style={{ height: '320px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />)
+              : featuredProducts.map(p => <div key={p.id} className={styles.scrollableItem}><ProductCard product={p} /></div>)
             }
           </div>
         </div>
@@ -169,10 +169,10 @@ export default function HomePage() {
             <div><p className={styles.sectionLabel}>Our Selection</p><h2>Shop All Products</h2></div>
             <Link to="/shop" className={styles.viewAll}>Browse all <ArrowRight size={15} /></Link>
           </div>
-          <div className={styles.productsGrid}>
+          <div className={styles.scrollableGrid}>
             {loading
-              ? Array(4).fill(0).map((_, i) => <div key={i} style={{ height: '320px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px' }} />)
-              : allProducts.map(p => <ProductCard key={p.id} product={p} />)
+              ? Array(7).fill(0).map((_, i) => <div key={i} className={styles.scrollableItem} style={{ height: '320px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px' }} />)
+              : allProducts.map(p => <div key={p.id} className={styles.scrollableItem}><ProductCard product={p} /></div>)
             }
           </div>
           <div className={styles.shopMoreWrap}>

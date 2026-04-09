@@ -26,7 +26,9 @@ async def create_review(db: AsyncSession, user_id: int, data: ReviewCreate) -> R
 
 async def get_reviews_for_product(db: AsyncSession, product_id: int) -> List[Review]:
     result = await db.execute(
-        select(Review).where(Review.product_id == product_id, Review.is_approved == True)
+        select(Review)
+        .options(selectinload(Review.user))
+        .where(Review.product_id == product_id, Review.is_approved == True)
         .order_by(Review.created_at.desc())
     )
     return result.scalars().all()

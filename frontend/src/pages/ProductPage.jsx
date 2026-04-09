@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ShoppingCart, Heart, Star, Truck, Shield, Clock, ChevronLeft, ChevronRight, Plus, Minus, Share2 } from 'lucide-react';
-import { productsAPI, getImageUrl } from '../services/api';
+import { productsAPI, reviewsAPI, getImageUrl } from '../services/api';
 import { useStore } from '../context/StoreContext';
 import ProductCard from '../components/UI/ProductCard';
 import styles from './ProductPage.module.css';
@@ -17,6 +18,10 @@ export default function ProductPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
+  
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, text: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -24,6 +29,14 @@ export default function ProductPage() {
       try {
         const data = await productsAPI.getBySlug(id);
         setProduct(data);
+        
+        try {
+          const reviewsData = await reviewsAPI.forProduct(data.id);
+          setReviews(reviewsData);
+        } catch (err) {
+          console.error("Failed to fetch reviews", err);
+        }
+        
         // Fetch related products (e.g., others in same category)
         if (data.category_id) {
           const relatedData = await productsAPI.list({ category_id: data.category_id, limit: 5 });
@@ -71,11 +84,35 @@ export default function ProductPage() {
     toggleWishlist(product);
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!state.user) return;
+    setSubmittingReview(true);
+    try {
+      const data = await reviewsAPI.create({
+        product_id: product.id,
+        rating: newReview.rating,
+        review_text: newReview.text
+      });
+      setReviews([data, ...reviews]);
+      setNewReview({ rating: 5, text: '' });
+      setProduct({
+        ...product,
+        review_count: (product.review_count || 0) + 1,
+        // Optional: Update average rating dynamically or just refetch, we'll just optimistically update count for now
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const TABS = [
     { id: 'description', label: 'Description' },
     { id: 'details', label: 'Details & Specs' },
     { id: 'delivery', label: 'Delivery Info' },
-    { id: 'reviews', label: 'Reviews (12)' },
+    { id: 'reviews', label: `Reviews (${product?.review_count || 0})` },
   ];
 
   return (
@@ -120,7 +157,7 @@ export default function ProductPage() {
                     <Star key={s} size={14} fill={s <= Math.round(Number(product.rating || 0)) ? 'currentColor' : 'none'} />
                   ))}
                 </div>
-                <span>{product.rating || 0} · 12 reviews</span>
+                <span>{product.rating || 0} · {product.review_count || 0} reviews</span>
               </div>
 
               {/* Price */}
@@ -264,24 +301,55 @@ export default function ProductPage() {
                   <div className={styles.reviewScore}>
                     <span className={styles.bigScore}>{product.rating || 0}</span>
                     <div className={styles.reviewRatingStars}>{'★'.repeat(Math.round(Number(product.rating || 0)))}</div>
-                    <span className={styles.reviewCount}>12 reviews</span>
+                    <span className={styles.reviewCount}>{product.review_count || 0} reviews</span>
                   </div>
                 </div>
-                <div className={styles.reviewList}>
-                  {[
-                    { author: 'James H.', rating: 5, text: 'Absolutely exceptional. Delivered within 90 minutes, perfectly packaged.', date: '2 days ago' },
-                    { author: 'Emma R.', rating: 5, text: 'Perfect quality, the taste is phenomenal. Will definitely order again.', date: '1 week ago' },
-                    { author: 'Oliver K.', rating: 4, text: 'Very good product, fast delivery. Slightly pricey but worth it for the quality.', date: '2 weeks ago' },
-                  ].map((r, i) => (
-                    <div key={i} className={styles.reviewItem}>
-                      <div className={styles.reviewHeader}>
-                        <div className={styles.reviewAvatar}>{r.author[0]}</div>
-                        <div><strong>{r.author}</strong><span className={styles.reviewDate}>{r.date}</span></div>
-                        <div className={styles.reviewStars}>{'★'.repeat(r.rating)}</div>
+
+                {state.user ? (
+                  <div className={styles.reviewFormSection}>
+                    <h3>Write a Review</h3>
+                    <form className={styles.reviewForm} onSubmit={handleReviewSubmit}>
+                      <div className={styles.ratingSelect}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                           <button type="button" key={star} onClick={() => setNewReview({...newReview, rating: star})} className={star <= newReview.rating ? styles.starSelected : styles.starUnselected}>
+                             <Star size={20} fill={star <= newReview.rating ? 'currentColor' : 'none'} color={star <= newReview.rating ? '#fbbf24' : '#4b5563'} />
+                           </button>
+                        ))}
                       </div>
-                      <p>{r.text}</p>
-                    </div>
-                  ))}
+                      <textarea 
+                        placeholder="Share your thoughts about this product..." 
+                        value={newReview.text}
+                        onChange={(e) => setNewReview({...newReview, text: e.target.value})}
+                        required
+                        className={styles.reviewTextarea}
+                        rows={4}
+                      />
+                      <button type="submit" disabled={submittingReview} className={styles.submitReviewBtn}>
+                        {submittingReview ? 'Submitting...' : 'Post Review'}
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className={styles.reviewGuestMessage}>
+                    <p>Want to leave a review? <Link to="/login">Sign in</Link> so we know who you are!</p>
+                  </div>
+                )}
+
+                <div className={styles.reviewList}>
+                  {reviews.length === 0 ? (
+                    <p className={styles.noReviews}>No reviews yet. Be the first to add one!</p>
+                  ) : (
+                    reviews.map((r, i) => (
+                      <div key={i} className={styles.reviewItem}>
+                        <div className={styles.reviewHeader}>
+                          <div className={styles.reviewAvatar}>{(r.user_name || 'U')[0].toUpperCase()}</div>
+                          <div><strong>{r.user_name || 'User'}</strong><span className={styles.reviewDate}>{new Date(r.created_at).toLocaleDateString()}</span></div>
+                          <div className={styles.reviewStars}>{'★'.repeat(Math.round(r.rating))}</div>
+                        </div>
+                        <p>{r.review_text}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}

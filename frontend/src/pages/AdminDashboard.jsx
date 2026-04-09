@@ -68,6 +68,7 @@ function OrdersTab() {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -83,7 +84,14 @@ function OrdersTab() {
 
   const updateStatus = async (id, status) => {
     setUpdatingId(id);
-    try { await adminAPI.updateOrderStatus(id, status); await fetchOrders(); toast.success('Status updated'); }
+    try { 
+      await adminAPI.updateOrderStatus(id, status); 
+      await fetchOrders(); 
+      if (selectedOrder?.id === id) {
+        setSelectedOrder(prev => ({ ...prev, status }));
+      }
+      toast.success('Status updated'); 
+    }
     catch (e) { toast.error(e.message); }
     finally { setUpdatingId(null); }
   };
@@ -99,6 +107,96 @@ function OrdersTab() {
           ))}
         </select>
       </div>
+
+      {selectedOrder && (
+        <div className={styles.formOverlay} onClick={() => setSelectedOrder(null)}>
+          <div className={styles.formCard} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px' }}>
+              <h3 style={{ margin: 0, border: 'none', padding: 0 }}>Order {selectedOrder.order_number}</h3>
+              <span className={styles.statusBadge} style={{ background: STATUS_COLORS[selectedOrder.status] + '22', color: STATUS_COLORS[selectedOrder.status], fontSize: '13px' }}>
+                {selectedOrder.status.toUpperCase()}
+              </span>
+            </div>
+
+            <div className={styles.orderModalContent}>
+              <div className={styles.orderGrid}>
+                {/* Customer & Shipping Info */}
+                <div className={styles.orderSection}>
+                  <h4><Package size={18} /> Delivery Details</h4>
+                  <div className={styles.infoPair}><span>Name</span><strong>{selectedOrder.shipping_name || 'N/A'}</strong></div>
+                  <div className={styles.infoPair} style={{ marginTop: '12px' }}>
+                    <span>Address</span>
+                    <strong>
+                      {selectedOrder.shipping_address}<br/>
+                      {selectedOrder.shipping_city}, {selectedOrder.shipping_postcode}
+                    </strong>
+                  </div>
+                  <div className={styles.infoPair} style={{ marginTop: '12px' }}><span>Phone</span><strong>{selectedOrder.shipping_phone || 'N/A'}</strong></div>
+                  {selectedOrder.notes && (
+                     <div className={styles.infoPair} style={{ marginTop: '12px' }}><span>Customer Notes</span><strong style={{ color: '#F59E0B' }}>{selectedOrder.notes}</strong></div>
+                  )}
+                </div>
+
+                {/* Payment Info */}
+                <div className={styles.orderSection}>
+                  <h4><Tag size={18} /> Payment & Status</h4>
+                  <div className={styles.infoPair}><span>Date</span><strong>{new Date(selectedOrder.created_at).toLocaleString('en-GB')}</strong></div>
+                  <div className={styles.infoPair} style={{ marginTop: '12px' }}><span>Payment Method</span><strong>{selectedOrder.payment_method ? selectedOrder.payment_method.toUpperCase() : 'STRIPE / CARD'}</strong></div>
+                  <div className={styles.infoPair} style={{ marginTop: '12px' }}><span>Payment Status</span><strong style={{ color: selectedOrder.payment_status === 'paid' ? '#10B981' : '#F59E0B' }}>{selectedOrder.payment_status ? selectedOrder.payment_status.toUpperCase() : 'PENDING'}</strong></div>
+                  {selectedOrder.coupon_code && (
+                     <div className={styles.infoPair} style={{ marginTop: '12px' }}><span>Coupon Applied</span><strong>{selectedOrder.coupon_code}</strong></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className={styles.orderSection}>
+                <h4><Package size={18} /> Order Items ({selectedOrder.items?.length || 0})</h4>
+                <div className={styles.orderItemsList}>
+                  {selectedOrder.items?.map(item => (
+                    <div key={item.id} className={styles.orderItemRow}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span className={styles.orderItemName}>{item.product_name}</span>
+                        <span className={styles.orderItemQty}>x{item.quantity}</span>
+                      </div>
+                      <span className={styles.orderItemPrice}>£{parseFloat(item.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className={styles.totalsBreakdown}>
+                  <div className={styles.totalRow}><span>Subtotal</span><span>£{parseFloat(selectedOrder.subtotal).toFixed(2)}</span></div>
+                  <div className={styles.totalRow}><span>Shipping</span><span>£{parseFloat(selectedOrder.shipping_cost).toFixed(2)}</span></div>
+                  <div className={styles.totalRow}><span>Tax (Included)</span><span>£{parseFloat(selectedOrder.tax).toFixed(2)}</span></div>
+                  {parseFloat(selectedOrder.discount) > 0 && (
+                    <div className={`${styles.totalRow} ${styles.discount}`}><span>Discount</span><span>-£{parseFloat(selectedOrder.discount).toFixed(2)}</span></div>
+                  )}
+                  <div className={`${styles.totalRow} ${styles.grandTotal}`}><span>Total</span><span>£{parseFloat(selectedOrder.total_price).toFixed(2)}</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '13px', color: '#888', fontWeight: 600 }}>UPDATE STATUS:</span>
+                <select
+                  value={selectedOrder.status}
+                  className={styles.statusSelect}
+                  onChange={e => updateStatus(selectedOrder.id, e.target.value)}
+                  disabled={updatingId === selectedOrder.id}
+                  style={{ background: '#222', padding: '8px 12px' }}
+                >
+                  {['pending','confirmed','processing','shipped','delivered','cancelled','refunded'].map(s => (
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <button className={styles.cancelBtn} onClick={() => setSelectedOrder(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? <p className={styles.loading}>Loading orders...</p> : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -116,16 +214,19 @@ function OrdersTab() {
                   </td>
                   <td>{new Date(o.created_at).toLocaleDateString('en-GB')}</td>
                   <td>
-                    <select
-                      defaultValue={o.status}
-                      className={styles.statusSelect}
-                      onChange={e => updateStatus(o.id, e.target.value)}
-                      disabled={updatingId === o.id}
-                    >
-                      {['pending','confirmed','processing','shipped','delivered','cancelled','refunded'].map(s => (
-                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                      ))}
-                    </select>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button className={styles.iconBtn} onClick={() => setSelectedOrder(o)} title="View Order Details"><Eye size={14} /></button>
+                      <select
+                        defaultValue={o.status}
+                        className={styles.statusSelect}
+                        onChange={e => updateStatus(o.id, e.target.value)}
+                        disabled={updatingId === o.id}
+                      >
+                        {['pending','confirmed','processing','shipped','delivered','cancelled','refunded'].map(s => (
+                          <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                        ))}
+                      </select>
+                    </div>
                   </td>
                 </tr>
               ))}

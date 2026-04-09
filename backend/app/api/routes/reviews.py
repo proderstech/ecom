@@ -14,7 +14,14 @@ reviews_router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
 @reviews_router.get("/{product_id}", response_model=List[ReviewResponse])
 async def get_reviews(product_id: int, db: AsyncSession = Depends(get_db)):
-    return await get_reviews_for_product(db, product_id)
+    reviews = await get_reviews_for_product(db, product_id)
+    results = []
+    for r in reviews:
+        resp = ReviewResponse.model_validate(r)
+        if getattr(r, "user", None):
+            resp.user_name = r.user.name
+        results.append(resp)
+    return results
 
 
 @reviews_router.post("", response_model=ReviewResponse, status_code=201)
@@ -27,7 +34,9 @@ async def add_review(
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
     try:
         review = await create_review(db, current_user.id, data)
-        return ReviewResponse.model_validate(review)
+        resp = ReviewResponse.model_validate(review)
+        resp.user_name = current_user.name
+        return resp
     except Exception:
         raise HTTPException(status_code=400, detail="You have already reviewed this product")
 

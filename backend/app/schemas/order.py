@@ -75,6 +75,11 @@ class OrderResponse(BaseModel):
     shipping_address: Optional[str]
     shipping_city: Optional[str]
     shipping_postcode: Optional[str]
+    shipping_phone: Optional[str] = None
+    notes: Optional[str] = None
+    coupon_code: Optional[str] = None
+    payment_method: Optional[str] = None
+    stripe_payment_intent_id: Optional[str] = None
     created_at: datetime
     items: List[OrderItemResponse] = []
 
@@ -95,6 +100,7 @@ class ReviewResponse(BaseModel):
     id: int
     product_id: int
     user_id: int
+    user_name: Optional[str] = None
     rating: float
     review_text: Optional[str]
     created_at: datetime
